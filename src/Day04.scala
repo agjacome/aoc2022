@@ -1,6 +1,4 @@
-#!/usr/bin/env scala
-
-import scala.io.Source
+package dev.agjacome.aoc2022
 
 final case class RangePair(r1: Range, r2: Range) {
 
@@ -12,7 +10,7 @@ final case class RangePair(r1: Range, r2: Range) {
 
 }
 
-object Day4 extends App {
+object Day04 extends Day {
 
   val LineRegex = """^(\d+)-(\d+),(\d+)-(\d+)$""".r
 
@@ -28,14 +26,13 @@ object Day4 extends App {
     }
   }
 
-  val source = args.headOption.fold(Source.stdin)(Source.fromFile)
+  def run(lines: Iterator[String]): Result = {
+    val ranges = lines.flatMap(parseRangeLine).to(LazyList)
 
-  val ranges = source.getLines.flatMap(parseRangeLine).to(LazyList)
+    val part1 = ranges.count(_.fullyContains)
+    val part2 = ranges.count(_.overlaps)
 
-  val part1 = ranges.count(_.fullyContains)
-  val part2 = ranges.count(_.overlaps)
-
-  println(s"Part 1: ${part1}")
-  println(s"Part 2: ${part2}")
+    Result(part1.toString, part2.toString)
+  }
 
 }

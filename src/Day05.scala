@@ -1,7 +1,6 @@
-#!/usr/bin/env scala
+package dev.agjacome.aoc2022
 
-import scala.collection.SortedMap
-import scala.io.Source
+import scala.collection.immutable.SortedMap
 
 final case class CrateStack(stacks: SortedMap[Int, List[Char]]) extends AnyVal {
 
@@ -82,24 +81,26 @@ object CargoCrane {
 }
 
 
-object Day5 extends App {
+object Day05 extends Day {
 
-  val source = args.headOption.fold(Source.stdin)(Source.fromFile)
+  def run(lines: Iterator[String]): Result = {
+    val (startStacks, rearrangeProcedure) = lines
+      .span(_.nonEmpty) match {
+        case (s, p) => (CrateStack.parse(s), Rearrangement.parseAll(p))
+      }
 
-  val (startStacks, rearrangeProcedure) = source.getLines()
-    .span(_.nonEmpty) match {
-      case (s, p) => (CrateStack.parse(s), Rearrangement.parseAll(p))
+    val (part1, part2) = rearrangeProcedure.foldLeft((startStacks, startStacks)) {
+      case ((stack1, stack2), rearrangement) =>
+        val newStack1 = CargoCrane.single.rearrange(stack1, rearrangement)
+        val newStack2 = CargoCrane.multi.rearrange(stack2, rearrangement)
+
+        (newStack1, newStack2)
     }
 
-  val (part1, part2) = rearrangeProcedure.foldLeft((startStacks, startStacks)) {
-    case ((stack1, stack2), rearrangement) =>
-      val newStack1 = CargoCrane.single.rearrange(stack1, rearrangement)
-      val newStack2 = CargoCrane.multi.rearrange(stack2, rearrangement)
-
-      (newStack1, newStack2)
+    Result(
+      part1 = part1.topmost.mkString,
+      part2 = part2.topmost.mkString
+    )
   }
-
-  println(s"Part 1: ${part1.topmost.mkString}")
-  println(s"Part 2: ${part2.topmost.mkString}")
 
 }

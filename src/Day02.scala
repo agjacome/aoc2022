@@ -1,6 +1,4 @@
-#!/usr/bin/env scala
-
-import scala.io.Source
+package dev.agjacome.aoc2022
 
 sealed abstract class Shape(val score: Int) {
 
@@ -52,11 +50,9 @@ object Outcome {
 
 }
 
-object Day2 extends App {
+object Day02 extends Day {
 
-  type Scores = (Int, Int)
-
-  def getGameScores(opponentSymbol: String, playerSymbol: String): Option[Scores] =
+  def getGameScores(opponentSymbol: String, playerSymbol: String): Option[(Int, Int)] =
     for {
       opponent <- Shape.fromOpponentSymbol(opponentSymbol)
 
@@ -71,19 +67,18 @@ object Day2 extends App {
       score2    = outcome2.score + player2.score
     } yield (score1, score2)
 
-  val source = args.headOption.fold(Source.stdin)(Source.fromFile)
+  def run(lines: Iterator[String]): Result =  {
+    val result = lines
+      .flatMap(_.split(' ') match {
+        case Array(opponent, player) =>
+          getGameScores(opponent, player)
+      })
+      .foldLeft((0, 0)) {
+        case ((total1, total2), (partial1, partial2)) =>
+          (total1 + partial1, total2 + partial2)
+      }
 
-  val scores = source.getLines
-    .flatMap(_.split(' ') match {
-      case Array(opponent, player) =>
-        getGameScores(opponent, player)
-    })
-    .foldLeft((0, 0)) {
-      case ((total1, total2), (partial1, partial2)) =>
-        (total1 + partial1, total2 + partial2)
-    }
-
-  println(s"Part 1: ${scores._1}")
-  println(s"Part 2: ${scores._2}")
+    Result(result._1.toString, result._2.toString)
+  }
 
 }
