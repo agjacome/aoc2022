@@ -14,7 +14,8 @@ object Day {
     Day03,
     Day04,
     Day05,
-    Day06
+    Day06,
+    Day07
   )
 
   val get: Int => Option[Day] =
