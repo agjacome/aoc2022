@@ -8,19 +8,19 @@ trait Day {
 
 object Day {
 
-  val all: List[Day] = List(
-    Day01,
-    Day02,
-    Day03,
-    Day04,
-    Day05,
-    Day06,
-    Day07,
-    Day08
+  val all: Map[Int, Day] = Map(
+    1 -> Day01,
+    2 -> Day02,
+    3 -> Day03,
+    4 -> Day04,
+    5 -> Day05,
+    6 -> Day06,
+    7 -> Day07,
+    8 -> Day08,
+    9 -> Day09
   )
 
-  val get: Int => Option[Day] =
-    all.zipWithIndex.map { case (day, idx) => (idx + 1, day) }.toMap.get
+  val get: Int => Option[Day] = all.get
 
 }
 
