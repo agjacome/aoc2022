@@ -14,7 +14,7 @@ final class Main(args: Main.Arguments) {
     } yield day.run(source.getLines())
 
   private def getDay(dayArg: Option[String]): ErrorOr[Day] =
-    for { 
+    for {
       dayStr <- dayArg.toRight("USAGE: ./Main day_number [input_file]")
       dayNum <- dayStr.toIntOption.toRight(s"'${dayStr}' is not a valid Day number")
       day    <- Day.get(dayNum).toRight(s"Day ${dayNum} not found")
@@ -33,8 +33,8 @@ final class Main(args: Main.Arguments) {
 object Main {
 
   final case class Arguments(
-    dayNumber: Option[String],
-    inputFile: Option[String]
+      dayNumber: Option[String],
+      inputFile: Option[String]
   )
 
   object Arguments {

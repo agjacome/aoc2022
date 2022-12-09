@@ -8,11 +8,11 @@ final case class Grid(rows: Seq[Seq[Int]]) {
     (0 to rows.size - 1).flatMap { i =>
       (0 to columns.size - 1).map { j =>
         Tree(
-          height     = rows(i)(j),
-          topView    = topOf(i, j),
-          leftView   = leftOf(i, j),
+          height = rows(i)(j),
+          topView = topOf(i, j),
+          leftView = leftOf(i, j),
           bottomView = bottomOf(i, j),
-          rightView  = rightOf(i, j)
+          rightView = rightOf(i, j)
         )
       }
     }
@@ -35,11 +35,11 @@ object Grid {
 }
 
 final case class Tree(
-  height: Int,
-  topView: Seq[Int],
-  leftView: Seq[Int],
-  bottomView: Seq[Int],
-  rightView: Seq[Int]
+    height: Int,
+    topView: Seq[Int],
+    leftView: Seq[Int],
+    bottomView: Seq[Int],
+    rightView: Seq[Int]
 ) {
 
   import Tree._

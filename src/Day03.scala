@@ -27,10 +27,10 @@ object Day03 extends Day {
       .sum
 
     val part2 = cachedLines
-       .grouped(3)
-       .flatMap(repeated)
-       .flatMap(priority)
-       .sum
+      .grouped(3)
+      .flatMap(repeated)
+      .flatMap(priority)
+      .sum
 
     Result(part1.toString, part2.toString)
   }

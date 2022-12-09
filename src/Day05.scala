@@ -22,8 +22,7 @@ object CrateStack {
 
   def parse(lines: Iterator[String]): CrateStack =
     CrateStack(
-      lines.toList
-        .transpose
+      lines.toList.transpose
         .map(_.filter(_.isLetter))
         .filter(_.nonEmpty)
         .zipWithIndex
@@ -39,9 +38,8 @@ object Rearrangement {
   val MoveRegex = """move (\d+) from (\d+) to (\d+)""".r
 
   def parseAll(lines: Iterator[String]): Iterator[Rearrangement] =
-    lines.collect {
-      case MoveRegex(move, from, to) =>
-        Rearrangement(move.toInt, from.toInt, to.toInt)
+    lines.collect { case MoveRegex(move, from, to) =>
+      Rearrangement(move.toInt, from.toInt, to.toInt)
     }
 
 }
@@ -80,14 +78,13 @@ object CargoCrane {
 
 }
 
-
 object Day05 extends Day {
 
   def run(lines: Iterator[String]): Result = {
     val (startStacks, rearrangeProcedure) = lines
       .span(_.nonEmpty) match {
-        case (s, p) => (CrateStack.parse(s), Rearrangement.parseAll(p))
-      }
+      case (s, p) => (CrateStack.parse(s), Rearrangement.parseAll(p))
+    }
 
     val (part1, part2) = rearrangeProcedure.foldLeft((startStacks, startStacks)) {
       case ((stack1, stack2), rearrangement) =>

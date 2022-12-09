@@ -4,10 +4,10 @@ sealed abstract class Direction(val dx: Int, val dy: Int)
 
 object Direction {
 
-  case object Up    extends Direction(dx =  0, dy =  1)
-  case object Down  extends Direction(dx =  0, dy = -1)
-  case object Left  extends Direction(dx = -1, dy =  0)
-  case object Right extends Direction(dx =  1, dy =  0)
+  case object Up    extends Direction(dx = 0, dy = 1)
+  case object Down  extends Direction(dx = 0, dy = -1)
+  case object Left  extends Direction(dx = -1, dy = 0)
+  case object Right extends Direction(dx = 1, dy = 0)
 
   private val Line = """^([DLRU]) (\d+)$""".r
 
@@ -68,7 +68,7 @@ final case class Rope(head: Knot, trail: List[Knot], visited: Set[(Int, Int)]) {
           (acc.reverse, visited)
       }
 
-    val newHead = head.move(direction)
+    val newHead                = head.move(direction)
     val (newTrail, newVisited) = loop(newHead, trail, List.empty)
 
     Rope(newHead, newTrail, visited ++ newVisited)
@@ -80,8 +80,8 @@ object Rope {
 
   def size(size: Int) =
     Rope(
-      head    = Knot.zero,
-      trail   = List.fill(size - 1)(Knot.zero),
+      head = Knot.zero,
+      trail = List.fill(size - 1)(Knot.zero),
       visited = Set(Knot.zero.position)
     )
 
@@ -92,7 +92,7 @@ object Day09 extends Day {
   def run(lines: Iterator[String]): Result = {
     val directions = lines.flatMap(Direction.parse).to(LazyList)
 
-    val part1 = directions.foldLeft(Rope.size( 2))(_ pull _).visited.size
+    val part1 = directions.foldLeft(Rope.size(2))(_ pull _).visited.size
     val part2 = directions.foldLeft(Rope.size(10))(_ pull _).visited.size
 
     Result(part1.toString, part2.toString)

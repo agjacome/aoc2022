@@ -49,9 +49,9 @@ object FileSystem {
     def loop(fs: FileSystem, currentPath: Path): FileSystem =
       log.nextOption() match {
         case None             => fs
-        case Some(cd("/" ))   => loop(fs, Path.root)
+        case Some(cd("/"))    => loop(fs, Path.root)
         case Some(cd(".."))   => loop(fs, currentPath.parent)
-        case Some(cd(dir ))   => loop(fs, currentPath / dir)
+        case Some(cd(dir))    => loop(fs, currentPath / dir)
         case Some(dir(dir))   => loop(fs + (currentPath / dir -> 0), currentPath)
         case Some(file(size)) => loop(fs + (currentPath -> size.toInt), currentPath)
         case _                => loop(fs, currentPath)
@@ -61,7 +61,6 @@ object FileSystem {
   }
 
 }
-
 
 object Day07 extends Day {
 

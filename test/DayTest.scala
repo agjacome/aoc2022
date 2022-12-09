@@ -3,9 +3,9 @@ package dev.agjacome.aoc2022
 import munit.FunSuite
 
 abstract class DayTest(
-  day: Day,
-  testInputLines: List[String],
-  expectedResult: Result
+    day: Day,
+    testInputLines: List[String],
+    expectedResult: Result
 ) extends FunSuite {
 
   test("part 1") {
@@ -23,4 +23,3 @@ abstract class DayTest(
   }
 
 }
-

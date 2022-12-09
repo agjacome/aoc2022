@@ -23,4 +23,3 @@ object Day {
   val get: Int => Option[Day] = all.get
 
 }
-

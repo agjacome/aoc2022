@@ -57,25 +57,24 @@ object Day02 extends Day {
       opponent <- Shape.fromOpponentSymbol(opponentSymbol)
 
       // part 1 score:
-      player1  <- Shape.fromPlayerSymbol(playerSymbol)
-      outcome1  = player1.playAgainst(opponent)
-      score1    = outcome1.score + player1.score
+      player1 <- Shape.fromPlayerSymbol(playerSymbol)
+      outcome1 = player1.playAgainst(opponent)
+      score1   = outcome1.score + player1.score
 
       // part 2 score:
       outcome2 <- Outcome.fromPlayerSymbol(playerSymbol)
-      player2   = outcome2.guessPlayer(opponent)
-      score2    = outcome2.score + player2.score
+      player2 = outcome2.guessPlayer(opponent)
+      score2  = outcome2.score + player2.score
     } yield (score1, score2)
 
-  def run(lines: Iterator[String]): Result =  {
+  def run(lines: Iterator[String]): Result = {
     val result = lines
       .flatMap(_.split(' ') match {
         case Array(opponent, player) =>
           getGameScores(opponent, player)
       })
-      .foldLeft((0, 0)) {
-        case ((total1, total2), (partial1, partial2)) =>
-          (total1 + partial1, total2 + partial2)
+      .foldLeft((0, 0)) { case ((total1, total2), (partial1, partial2)) =>
+        (total1 + partial1, total2 + partial2)
       }
 
     Result(result._1.toString, result._2.toString)

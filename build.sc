@@ -15,7 +15,9 @@ object Versions {
   val MUnit = "1.0.0-M7"
 }
 
-trait Module extends ScalaModule with ScalafmtModule with TpolecatModule {
+trait BaseModule extends ScalaModule with ScalafmtModule with TpolecatModule
+
+trait Module extends BaseModule {
 
   def scalaVersion = Versions.Scala
 
@@ -28,7 +30,7 @@ trait Module extends ScalaModule with ScalafmtModule with TpolecatModule {
 
   def sources = T.sources(os.pwd / "src")
 
-  object test extends Tests with TestModule.Munit {
+  object test extends BaseModule with Tests with TestModule.Munit {
     def ivyDeps = Agg(ivy"org.scalameta::munit:${Versions.MUnit}")
     def sources = T.sources(os.pwd / "test")
   }

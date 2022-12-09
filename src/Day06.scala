@@ -13,7 +13,6 @@ object Day06 extends Day {
     Option(slideIndex).filter(_ >= 0).map(_ + markerLength)
   }
 
-
   def run(lines: Iterator[String]): Result = {
     val markers = lines
       .flatMap { signal =>
