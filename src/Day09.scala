@@ -4,14 +4,14 @@ sealed abstract class Direction(val dx: Int, val dy: Int)
 
 object Direction {
 
-  case object Up    extends Direction( 0,  1)
-  case object Down  extends Direction( 0, -1)
-  case object Left  extends Direction(-1,  0)
-  case object Right extends Direction( 1,  0)
+  case object Up    extends Direction(dx =  0, dy =  1)
+  case object Down  extends Direction(dx =  0, dy = -1)
+  case object Left  extends Direction(dx = -1, dy =  0)
+  case object Right extends Direction(dx =  1, dy =  0)
 
-  def parse(line: String): List[Direction] = {
-    val Line = """^([DLRU]) (\d+)$""".r
+  private val Line = """^([DLRU]) (\d+)$""".r
 
+  def parse(line: String): List[Direction] =
     line match {
       case Line("U", count) => List.fill(count.toInt)(Up)
       case Line("D", count) => List.fill(count.toInt)(Down)
@@ -19,7 +19,6 @@ object Direction {
       case Line("R", count) => List.fill(count.toInt)(Right)
       case _                => Nil
     }
-  }
 
 }
 
@@ -33,8 +32,8 @@ final case class Knot(x: Int, y: Int) {
     Knot(x + dir.dx, y + dir.dy)
 
   def pull(head: Knot): Knot = {
-    val dx = (head.x - this.x)
-    val dy = (head.y - this.y)
+    val dx = (head.x - x)
+    val dy = (head.y - y)
 
     if (dx.abs <= 1 && dy.abs <= 1)
       this
@@ -91,10 +90,10 @@ object Rope {
 object Day09 extends Day {
 
   def run(lines: Iterator[String]): Result = {
-    val motions = lines.flatMap(Direction.parse).to(LazyList)
+    val directions = lines.flatMap(Direction.parse).to(LazyList)
 
-    val part1 = motions.foldLeft(Rope.size( 2))(_ pull _).visited.size
-    val part2 = motions.foldLeft(Rope.size(10))(_ pull _).visited.size
+    val part1 = directions.foldLeft(Rope.size( 2))(_ pull _).visited.size
+    val part2 = directions.foldLeft(Rope.size(10))(_ pull _).visited.size
 
     Result(part1.toString, part2.toString)
   }
