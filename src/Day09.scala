@@ -1,5 +1,7 @@
 package dev.agjacome.aoc2022
 
+import predef._
+
 sealed abstract class Direction(val dx: Int, val dy: Int)
 
 object Direction {
@@ -24,8 +26,6 @@ object Direction {
 
 final case class Knot(x: Int, y: Int) {
 
-  import Knot._
-
   def position: (Int, Int) = (x, y)
 
   def move(dir: Direction): Knot =
@@ -46,10 +46,6 @@ final case class Knot(x: Int, y: Int) {
 object Knot {
 
   val zero = Knot(0, 0)
-
-  implicit final class IntOps(private val self: Int) {
-    def clamp(low: Int, high: Int): Int = self.max(low).min(high)
-  }
 
 }
 

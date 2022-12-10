@@ -1,5 +1,7 @@
 package dev.agjacome.aoc2022
 
+import predef._
+
 final case class Grid(rows: Seq[Seq[Int]]) {
 
   val columns: Seq[Seq[Int]] = rows.transpose
@@ -42,8 +44,6 @@ final case class Tree(
     rightView: Seq[Int]
 ) {
 
-  import Tree._
-
   val isVisible: Boolean = {
     val top    = topView.forall(_ < height)
     val left   = leftView.forall(_ < height)
@@ -60,17 +60,6 @@ final case class Tree(
     val right  = rightView.takeUntil(_ < height).size
 
     top * left * bottom * right
-  }
-
-}
-
-object Tree {
-
-  final implicit class SeqOps[A](private val self: Seq[A]) extends AnyVal {
-    def takeUntil(f: A => Boolean): Seq[A] =
-      self.span(f) match {
-        case (head, tail) => head ++ tail.take(1)
-      }
   }
 
 }
