@@ -17,16 +17,14 @@ object Day03 extends Day {
       None
   }
 
-  def run(lines: Iterator[String]): Result = {
-    val cachedLines = lines.to(LazyList)
-
-    val part1 = cachedLines
+  def run(lines: LazyList[String]): Result = {
+    val part1 = lines
       .map(s => s.splitAt(s.length / 2))
       .flatMap(cs => repeated(List(cs._1, cs._2)))
       .flatMap(priority)
       .sum
 
-    val part2 = cachedLines
+    val part2 = lines
       .grouped(3)
       .flatMap(repeated)
       .flatMap(priority)

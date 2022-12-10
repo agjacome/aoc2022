@@ -52,32 +52,32 @@ object Outcome {
 
 object Day02 extends Day {
 
-  def getGameScores(opponentSymbol: String, playerSymbol: String): Option[(Int, Int)] =
-    for {
-      opponent <- Shape.fromOpponentSymbol(opponentSymbol)
+  def run(lines: LazyList[String]): Result = {
+    val symbols = lines
+      .map(_.split(' '))
+      .collect { case Array(opponent, player) => (opponent, player) }
 
-      // part 1 score:
-      player1 <- Shape.fromPlayerSymbol(playerSymbol)
-      outcome1 = player1.playAgainst(opponent)
-      score1   = outcome1.score + player1.score
+    val part1 = symbols.flatMap { case (opponentSymbol, playerSymbol) =>
+      for {
+        opponent <- Shape.fromOpponentSymbol(opponentSymbol)
+        player   <- Shape.fromPlayerSymbol(playerSymbol)
 
-      // part 2 score:
-      outcome2 <- Outcome.fromPlayerSymbol(playerSymbol)
-      player2 = outcome2.guessPlayer(opponent)
-      score2  = outcome2.score + player2.score
-    } yield (score1, score2)
+        outcome = player.playAgainst(opponent)
+        score   = outcome.score + player.score
+      } yield score
+    }.sum
 
-  def run(lines: Iterator[String]): Result = {
-    val result = lines
-      .flatMap(_.split(' ') match {
-        case Array(opponent, player) =>
-          getGameScores(opponent, player)
-      })
-      .foldLeft((0, 0)) { case ((total1, total2), (partial1, partial2)) =>
-        (total1 + partial1, total2 + partial2)
-      }
+    val part2 = symbols.flatMap { case (opponentSymbol, playerSymbol) =>
+      for {
+        opponent <- Shape.fromOpponentSymbol(opponentSymbol)
+        outcome  <- Outcome.fromPlayerSymbol(playerSymbol)
 
-    Result(result._1.toString, result._2.toString)
+        player = outcome.guessPlayer(opponent)
+        score  = outcome.score + player.score
+      } yield score
+    }.sum
+
+    Result(part1.toString, part2.toString)
   }
 
 }

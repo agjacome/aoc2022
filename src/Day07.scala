@@ -7,7 +7,6 @@ final case class Path(components: Vector[String]) extends AnyVal {
 
   def parent: Path =
     this.copy(components.dropRight(1))
-
   def startsWith(prefix: Path): Boolean =
     components.startsWith(prefix.components)
 
@@ -40,31 +39,31 @@ object FileSystem {
 
   val empty = FileSystem(Map.empty)
 
-  def fromCliLog(log: Iterator[String]): FileSystem = {
+  def fromCliLog(log: LazyList[String]): FileSystem = {
     val cd   = """^\$ cd (.+)$""".r
     val dir  = """^dir (.+)$""".r
     val file = """^(\d+) .+$""".r
 
     @scala.annotation.tailrec
-    def loop(fs: FileSystem, currentPath: Path): FileSystem =
-      log.nextOption() match {
-        case None             => fs
-        case Some(cd("/"))    => loop(fs, Path.root)
-        case Some(cd(".."))   => loop(fs, currentPath.parent)
-        case Some(cd(dir))    => loop(fs, currentPath / dir)
-        case Some(dir(dir))   => loop(fs + (currentPath / dir -> 0), currentPath)
-        case Some(file(size)) => loop(fs + (currentPath -> size.toInt), currentPath)
-        case _                => loop(fs, currentPath)
+    def loop(fs: FileSystem, currentPath: Path, pending: LazyList[String]): FileSystem =
+      pending match {
+        case LazyList()          => fs
+        case cd("/") #:: tail    => loop(fs, Path.root, tail)
+        case cd("..") #:: tail   => loop(fs, currentPath.parent, tail)
+        case cd(dir) #:: tail    => loop(fs, currentPath / dir, tail)
+        case dir(dir) #:: tail   => loop(fs + (currentPath / dir -> 0), currentPath, tail)
+        case file(size) #:: tail => loop(fs + (currentPath -> size.toInt), currentPath, tail)
+        case _ #:: tail          => loop(fs, currentPath, tail)
       }
 
-    loop(FileSystem.empty, Path.root)
+    loop(FileSystem.empty, Path.root, log)
   }
 
 }
 
 object Day07 extends Day {
 
-  def run(lines: Iterator[String]): Result = {
+  def run(lines: LazyList[String]): Result = {
     val fs    = FileSystem.fromCliLog(lines)
     val sizes = fs.sizes
 

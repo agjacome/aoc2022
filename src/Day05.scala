@@ -20,7 +20,7 @@ object CrateStack {
   def apply(crates: Seq[(Int, List[Char])]): CrateStack =
     CrateStack(SortedMap.from(crates))
 
-  def parse(lines: Iterator[String]): CrateStack =
+  def parse(lines: Seq[String]): CrateStack =
     CrateStack(
       lines.toList.transpose
         .map(_.filter(_.isLetter))
@@ -37,7 +37,7 @@ object Rearrangement {
 
   val MoveRegex = """move (\d+) from (\d+) to (\d+)""".r
 
-  def parseAll(lines: Iterator[String]): Iterator[Rearrangement] =
+  def parseAll(lines: Seq[String]): Seq[Rearrangement] =
     lines.collect { case MoveRegex(move, from, to) =>
       Rearrangement(move.toInt, from.toInt, to.toInt)
     }
@@ -80,24 +80,16 @@ object CargoCrane {
 
 object Day05 extends Day {
 
-  def run(lines: Iterator[String]): Result = {
-    val (startStacks, rearrangeProcedure) = lines
-      .span(_.nonEmpty) match {
-      case (s, p) => (CrateStack.parse(s), Rearrangement.parseAll(p))
-    }
+  def run(lines: LazyList[String]): Result = {
+    val (startStacks, rearrangeProcedure) =
+      lines.span(_.nonEmpty) match {
+        case (s, p) => (CrateStack.parse(s), Rearrangement.parseAll(p))
+      }
 
-    val (part1, part2) = rearrangeProcedure.foldLeft((startStacks, startStacks)) {
-      case ((stack1, stack2), rearrangement) =>
-        val newStack1 = CargoCrane.single.rearrange(stack1, rearrangement)
-        val newStack2 = CargoCrane.multi.rearrange(stack2, rearrangement)
+    val part1 = rearrangeProcedure.foldLeft(startStacks)(CargoCrane.single.rearrange).topmost
+    val part2 = rearrangeProcedure.foldLeft(startStacks)(CargoCrane.multi.rearrange).topmost
 
-        (newStack1, newStack2)
-    }
-
-    Result(
-      part1 = part1.topmost.mkString,
-      part2 = part2.topmost.mkString
-    )
+    Result(part1.mkString, part2.mkString)
   }
 
 }

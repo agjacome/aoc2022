@@ -2,24 +2,19 @@ package dev.agjacome.aoc2022
 
 import munit.FunSuite
 
-abstract class DayTest(
-    day: Day,
-    testInputLines: List[String],
-    expectedResult: Result
-) extends FunSuite {
+abstract class DayTest(day: Day) extends FunSuite {
+
+  protected def input: LazyList[String]
+  protected def expected: Result
+
+  private lazy val actual = day.run(input)
 
   test("part 1") {
-    val expected = expectedResult.part1
-    val actual   = day.run(testInputLines.iterator)
-
-    assertEquals(actual.part1, expected)
+    assertEquals(actual.part1, expected.part1)
   }
 
   test("part 2") {
-    val expected = expectedResult.part2
-    val actual   = day.run(testInputLines.iterator)
-
-    assertEquals(actual.part2, expected)
+    assertEquals(actual.part2, expected.part2)
   }
 
 }

@@ -26,8 +26,8 @@ object Day04 extends Day {
     }
   }
 
-  def run(lines: Iterator[String]): Result = {
-    val ranges = lines.flatMap(parseRangeLine).to(LazyList)
+  def run(lines: LazyList[String]): Result = {
+    val ranges = lines.flatMap(parseRangeLine)
 
     val part1 = ranges.count(_.fullyContains)
     val part2 = ranges.count(_.overlaps)

@@ -2,7 +2,7 @@ package dev.agjacome.aoc2022
 
 object Day01 extends Day {
 
-  def run(lines: Iterator[String]): Result = {
+  def run(lines: LazyList[String]): Result = {
     val calories = lines
       .foldLeft(List.empty[Int]) {
         case (cals, "")          => 0 :: cals
@@ -11,10 +11,10 @@ object Day01 extends Day {
       }
       .sorted(Ordering[Int].reverse)
 
-    Result(
-      part1 = calories.head.toString,
-      part2 = calories.take(3).sum.toString
-    )
+    val part1 = calories.head
+    val part2 = calories.take(3).sum
+
+    Result(part1.toString, part2.toString)
   }
 
 }

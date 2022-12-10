@@ -80,23 +80,21 @@ object CrtState {
 
 object Day10 extends Day {
 
-  def run(lines: Iterator[String]): Result = {
-    val instructions = lines.flatMap(Instruction.parse)
-
-    val cpuStateLog = instructions
+  def run(lines: LazyList[String]): Result = {
+    val cpuLog = lines
+      .flatMap(Instruction.parse)
       .foldLeft(List(CpuState.initial)) {
         case (states @ head :: _, instruction) => head.execute(instruction) ::: states
         case (Nil, instruction)                => CpuState.initial.execute(instruction)
       }
       .reverse
-      .to(LazyList)
 
-    val part1 = cpuStateLog
+    val part1 = cpuLog
       .filter(cpu => Set(20, 60, 100, 140, 180, 220).contains(cpu.cycle))
       .map(_.signalStrength)
       .sum
 
-    val part2 = cpuStateLog
+    val part2 = cpuLog
       .foldLeft(CrtState.blank(40, 6))(_ drawPixel _)
       .print
 

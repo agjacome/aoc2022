@@ -11,7 +11,10 @@ final class Main(args: Main.Arguments) {
     for {
       day    <- getDay(args.dayNumber)
       source <- getSource(args.inputFile)
-    } yield day.run(source.getLines())
+
+      lines  = source.getLines().to(LazyList)
+      result = day.run(lines)
+    } yield result
 
   private def getDay(dayArg: Option[String]): ErrorOr[Day] =
     for {

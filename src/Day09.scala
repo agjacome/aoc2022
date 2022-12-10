@@ -89,8 +89,8 @@ object Rope {
 
 object Day09 extends Day {
 
-  def run(lines: Iterator[String]): Result = {
-    val directions = lines.flatMap(Direction.parse).to(LazyList)
+  def run(lines: LazyList[String]): Result = {
+    val directions = lines.flatMap(Direction.parse)
 
     val part1 = directions.foldLeft(Rope.size(2))(_ pull _).visited.size
     val part2 = directions.foldLeft(Rope.size(10))(_ pull _).visited.size

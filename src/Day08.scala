@@ -29,8 +29,8 @@ final case class Grid(rows: Seq[Seq[Int]]) {
 
 object Grid {
 
-  def parse(lines: Iterator[String]): Grid =
-    Grid(rows = lines.to(Vector).map(_.to(Vector).map(_.asDigit)))
+  def parse(lines: LazyList[String]): Grid =
+    Grid(rows = lines.map(_.map(_.asDigit)))
 
 }
 
@@ -77,7 +77,7 @@ object Tree {
 
 object Day08 extends Day {
 
-  def run(lines: Iterator[String]): Result = {
+  def run(lines: LazyList[String]): Result = {
     val grid = Grid.parse(lines)
 
     val part1 = grid.trees.count(_.isVisible)

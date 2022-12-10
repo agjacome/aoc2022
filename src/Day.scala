@@ -3,7 +3,7 @@ package dev.agjacome.aoc2022
 final case class Result(part1: String, part2: String)
 
 trait Day {
-  def run(lines: Iterator[String]): Result
+  def run(lines: LazyList[String]): Result
 }
 
 object Day {
