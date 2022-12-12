@@ -42,20 +42,18 @@ final case class HeightMap(
     this.copy(end = square)
 
   def shortestPathFromStart: List[Square] =
-    shortestPathFrom(start)
+    bfs(start, end)
 
-  def shortestPathsFrom(elevation: Int): Set[List[Square]] =
+  def shortestPathFromElevation(elevation: Int): List[Square] =
     elevations
       .collect { case (square, `elevation`) => square }
-      .map(shortestPathFrom)
+      .map(start => bfs(start, end))
       .filter(_.nonEmpty)
-      .toSet
+      .minBy(_.size)
 
-  def allPaths: Set[List[Square]] =
-    elevations.filter { case (_, e) => e == 1 }.keys.toSet.map(shortestPathFrom).filter(_.nonEmpty)
 
-  // BFS, TODO: optimize to Dijkstra/A*
-  private def shortestPathFrom(start: Square): List[Square] = {
+  private def bfs(start: Square, end: Square): List[Square] = {
+    @scala.annotation.tailrec
     def reconstruct(
         cameFrom: Map[Square, Square],
         current: Square,
@@ -67,6 +65,7 @@ final case class HeightMap(
         reconstruct(cameFrom, cameFrom(current), current :: path)
     }
 
+    @scala.annotation.tailrec
     def loop(frontier: Queue[Square], cameFrom: Map[Square, Square]): List[Square] =
       frontier match {
         case `end` +: _ =>
@@ -122,7 +121,7 @@ object Day12 extends Day {
     val map = HeightMap.parse(lines)
 
     val part1 = map.shortestPathFromStart.size - 1
-    val part2 = map.shortestPathsFrom(elevation = 1).map(_.size - 1).min
+    val part2 = map.shortestPathFromElevation(1).size - 1
 
     Result(part1.toString, part2.toString)
   }
