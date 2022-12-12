@@ -1,7 +1,5 @@
 package dev.agjacome.aoc2022
 
-import scala.collection.immutable.SortedMap
-
 object predef {
 
   implicit final class OrderedOps[A: Ordering](private val self: A) {
@@ -22,8 +20,8 @@ object predef {
 
   }
 
-  implicit final class SortedMapOps[A, B](private val self: SortedMap[A, B]) extends AnyVal {
-    def update(k: A)(f: B => B): SortedMap[A, B] =
+  implicit final class MapOps[A, B](private val self: Map[A, B]) extends AnyVal {
+    def updating(k: A)(f: B => B): Map[A, B] =
       self.updatedWith(k)(_.map(f))
   }
 

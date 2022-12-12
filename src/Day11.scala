@@ -1,6 +1,17 @@
 package dev.agjacome.aoc2022
 
+import predef._
+
 import scala.collection.immutable.Queue
+
+sealed abstract class WorryLevel(level: Long) {
+  def apply(itemLevel: Long): Long = itemLevel / this.level
+}
+
+object WorryLevel {
+  case object Relaxed extends WorryLevel(3)
+  case object Anxious extends WorryLevel(1)
+}
 
 final case class Monkey(
     id: Monkey.Id,
@@ -8,24 +19,32 @@ final case class Monkey(
     operation: Monkey.Item => Monkey.Item,
     divisor: Long,
     throwItem: Boolean => Monkey.Id,
-    inspectCount: Long = 0
+    itemsInspected: Long
 ) {
 
   def receive(item: Monkey.Item): Monkey =
     this.copy(items = items :+ item)
 
-  def play(lcm: Long, worryLevelDivisor: Long): (Monkey, Queue[(Monkey.Id, Monkey.Item)]) = {
-    val updated = this.copy(items = Queue.empty, inspectCount = inspectCount + items.size)
+  def playTurn(
+      worryLevel: WorryLevel,
+      normalizeItem: Monkey.Item => Monkey.Item
+  ): (Monkey, Queue[(Monkey.Id, Monkey.Item)]) = {
+    val updateItem = operation.andThen(normalizeItem).andThen(worryLevel.apply)
+
+    val updatedMonkey = this.copy(
+      items = Queue.empty,
+      itemsInspected = itemsInspected + items.size
+    )
 
     val throws = items.map { item =>
-      val itemLevel   = (operation(item) % lcm) / worryLevelDivisor
-      val condition   = itemLevel        % divisor == 0
+      val itemLevel   = updateItem(item)
+      val condition   = itemLevel % divisor == 0
       val destination = throwItem(condition)
 
       destination -> itemLevel
     }
 
-    (updated, throws)
+    (updatedMonkey, throws)
   }
 
 }
@@ -35,8 +54,6 @@ object Monkey {
   type Id   = Int
   type Item = Long
 
-  implicit val ordering: Ordering[Monkey] = Ordering.by(_.id)
-
   private val MonkeyLines =
     """|(?s)^Monkey (\d+):
        |\s{2}Starting items: (\d+(?:, \d+)*)+
@@ -45,85 +62,115 @@ object Monkey {
        |\s{4}If true: throw to monkey (\d+)
        |\s{4}If false: throw to monkey (\d+)$""".stripMargin.r
 
-  private def buildMonkey(
-      id: String,
-      items: String,
-      operandX: String,
-      operator: String,
-      operandY: String,
-      divisor: String,
-      truthy: String,
-      falsey: String
-  ): Monkey = {
-    val parsedId    = id.toInt
-    val parsedItems = items.split(", ").map(_.toLong).to(Queue)
+  val parse: String => Option[Monkey] = {
+    case MonkeyLines(id, items, operandL, operator, operandR, divisor, truthy, falsey) =>
+      def parsedId    = id.toInt
+      val parsedItems = items.split(", ").map(_.toLong).to(Queue)
 
-    val parseOperand = (item: Item, operand: String) =>
-      if (operand == "old") item else operand.toLong
+      val operand = (item: Item, operand: String) => if (operand == "old") item else operand.toLong
 
-    val parsedOperation: Item => Item = operator match {
-      case "+" => (item: Item) => parseOperand(item, operandX) + parseOperand(item, operandY)
-      case "*" => (item: Item) => parseOperand(item, operandX) * parseOperand(item, operandY)
-      case _   => identity
-    }
+      val parsedOperation: Item => Item = operator match {
+        case "+" => item => operand(item, operandL) + operand(item, operandR)
+        case "*" => item => operand(item, operandL) * operand(item, operandR)
+        case _   => identity
+      }
 
-    val parsedDivisor              = divisor.toLong
-    val parsedThrow: Boolean => Id = cond => if (cond) truthy.toInt else falsey.toInt
+      val parsedDivisor = divisor.toLong
+      val parsedThrows  = if (_) truthy.toInt else falsey.toInt
 
-    Monkey(parsedId, parsedItems, parsedOperation, parsedDivisor, parsedThrow)
+      Some(
+        Monkey(
+          id = parsedId,
+          items = parsedItems,
+          operation = parsedOperation,
+          divisor = parsedDivisor,
+          throwItem = parsedThrows,
+          itemsInspected = 0
+        )
+      )
 
+    case _ => None
   }
 
-  def parse: String => Option[Monkey] = {
-    case MonkeyLines(id, items, opX, op, opY, test, truthy, falsey) =>
-      Some(buildMonkey(id, items, opX, op, opY, test, truthy, falsey))
-    case _ =>
-      None
-  }
-
-  def parseAll(lines: Seq[String]): List[Monkey] =
-    lines.filterNot(_.isEmpty).grouped(6).map(_.mkString("\n")).flatMap(parse).to(List)
+  def parse(lines: LazyList[String]): LazyList[Monkey] =
+    lines
+      .filterNot(_.isEmpty)
+      .grouped(6)
+      .map(_.mkString("\n"))
+      .flatMap(parse)
+      .to(LazyList)
 
 }
 
-final case class MonkeyGame(monkeys: List[Monkey], worryLevelDivisor: Long) {
+final case class KeepAwayGame(monkeys: Map[Monkey.Id, Monkey], lcm: Long) {
 
-  val lcm = monkeys.map(_.divisor).product
+  private def normalizeItem(item: Monkey.Item): Monkey.Item =
+    item % lcm
 
-  def playRounds(n: Int): MonkeyGame =
-    if (n <= 0) this else this.playRound.playRounds(n - 1)
+  @scala.annotation.tailrec
+  def playRounds(rounds: Int, worry: WorryLevel): KeepAwayGame =
+    if (rounds <= 0)
+      this
+    else
+      this.playRound(worry).playRounds(rounds - 1, worry)
 
-  def playRound: MonkeyGame = {
+  def playRound(worry: WorryLevel): KeepAwayGame = {
     @scala.annotation.tailrec
-    def loop(id: Monkey.Id, acc: List[Monkey]): List[Monkey] =
-      acc.lift(id) match {
-        case None => acc
-        case Some(monkey) =>
-          val (updated, throws) = monkey.play(lcm, worryLevelDivisor)
+    def loop(
+        ids: List[Monkey.Id],
+        acc: Map[Monkey.Id, Monkey]
+    ): Map[Monkey.Id, Monkey] =
+      ids match {
+        case monkeyId :: next =>
+          val (updated, throws) = acc(monkeyId).playTurn(worry, normalizeItem)
 
-          val nextAcc = throws.foldLeft(acc.updated(monkey.id, updated)) {
-            case (monkeys, (id, item)) =>
-              monkeys.updated(id, monkeys(id).receive(item))
+          val updatedAcc0 = acc.updated(monkeyId, updated)
+          val updatedAcc1 = throws.foldLeft(updatedAcc0) { case (acc, (id, items)) =>
+            acc.updating(id)(_.receive(items))
           }
 
-          loop(id + 1, nextAcc)
+          loop(next, updatedAcc1)
+
+        case Nil => acc
       }
 
-    this.copy(monkeys = loop(0, monkeys))
+    val monkeyIds = monkeys.keys.to(List).sorted
+    this.copy(monkeys = loop(monkeyIds, monkeys))
   }
 
   def monkeyBusiness: Long =
-    monkeys.map(_.inspectCount).sorted(Ordering[Long].reverse).take(2).product
+    monkeys.values
+      .map(_.itemsInspected)
+      .to(List)
+      .sorted(Ordering[Long].reverse)
+      .take(2)
+      .product
+
+}
+
+object KeepAwayGame {
+
+  def from(monkeys: Iterable[Monkey]): KeepAwayGame = {
+    val lcm = {
+      def gcd(a: Long, b: Long): Long = if (b == 0) a.abs else gcd(b, a % b)
+      def lcm(a: Long, b: Long): Long = (a * b).abs / gcd(a, b)
+
+      monkeys.map(_.divisor).foldLeft(1L)(lcm)
+    }
+
+    KeepAwayGame(monkeys.map(m => m.id -> m).to(Map), lcm)
+  }
 
 }
 
 object Day11 extends Day {
 
   def run(lines: LazyList[String]): Result = {
-    val monkeys = Monkey.parseAll(lines).to(List).sorted
+    val monkeys = Monkey.parse(lines)
+    val game    = KeepAwayGame.from(monkeys)
 
-    val part1 = MonkeyGame(monkeys, 3).playRounds(20).monkeyBusiness
-    val part2 = MonkeyGame(monkeys, 1).playRounds(10000).monkeyBusiness
+    val part1 = game.playRounds(20, WorryLevel.Relaxed).monkeyBusiness
+    val part2 = game.playRounds(10000, WorryLevel.Anxious).monkeyBusiness
 
     Result(part1.toString, part2.toString)
   }
