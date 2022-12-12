@@ -19,7 +19,7 @@ final case class Monkey(
 
     val throws = items.map { item =>
       val itemLevel   = (operation(item) % lcm) / worryLevelDivisor
-      val condition   = itemLevel % divisor == 0
+      val condition   = itemLevel        % divisor == 0
       val destination = throwItem(condition)
 
       destination -> itemLevel
@@ -67,8 +67,8 @@ object Monkey {
       case _   => identity
     }
 
-    val parsedDivisor = divisor.toLong
-    val parsedThrow: Boolean => Id  = cond => if (cond) truthy.toInt else falsey.toInt
+    val parsedDivisor              = divisor.toLong
+    val parsedThrow: Boolean => Id = cond => if (cond) truthy.toInt else falsey.toInt
 
     Monkey(parsedId, parsedItems, parsedOperation, parsedDivisor, parsedThrow)
 
@@ -90,14 +90,14 @@ final case class MonkeyGame(monkeys: List[Monkey], worryLevelDivisor: Long) {
 
   val lcm = monkeys.map(_.divisor).product
 
-  def playRounds(n: Int): MonkeyGame = 
+  def playRounds(n: Int): MonkeyGame =
     if (n <= 0) this else this.playRound.playRounds(n - 1)
 
   def playRound: MonkeyGame = {
     @scala.annotation.tailrec
     def loop(id: Monkey.Id, acc: List[Monkey]): List[Monkey] =
       acc.lift(id) match {
-        case None         => acc
+        case None => acc
         case Some(monkey) =>
           val (updated, throws) = monkey.play(lcm, worryLevelDivisor)
 
