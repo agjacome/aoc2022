@@ -1,41 +1,73 @@
 package dev.agjacome.aoc2022
 
-final case class Coordinates(row: Int, col: Int) {
+final case class Point(row: Int, col: Int) {
 
-  def up: Coordinates    = this.copy(row = row - 1)
-  def down: Coordinates  = this.copy(row = row + 1)
-  def left: Coordinates  = this.copy(col = col - 1)
-  def right: Coordinates = this.copy(col = col + 1)
+  def up: Point    = this.copy(row = row - 1)
+  def down: Point  = this.copy(row = row + 1)
+  def left: Point  = this.copy(col = col - 1)
+  def right: Point = this.copy(col = col + 1)
 
-  def neighbors: Set[Coordinates] = Set(up, down, left, right)
+  def neighbors: Set[Point] = Set(up, down, left, right)
+
+  def isUpOf(that: Point): Boolean    = this.row < that.row && this.col == that.col
+  def isDownOf(that: Point): Boolean  = this.row > that.row && this.col == that.col
+  def isLeftOf(that: Point): Boolean  = this.col < that.col && this.row == that.row
+  def isRightOf(that: Point): Boolean = this.col > that.col && this.row == that.row
+
+  def lineTo(dest: Point): List[Point] = {
+    @scala.annotation.tailrec
+    def loop(curr: Point, acc: List[Point]): List[Point] =
+      if (curr == dest)
+        (dest :: acc).reverse
+      else if (curr.isUpOf(dest))
+        loop(curr.down, curr :: acc)
+      else if (curr.isDownOf(dest))
+        loop(curr.up, curr :: acc)
+      else if (curr.isLeftOf(dest))
+        loop(curr.right, curr :: acc)
+      else if (curr.isRightOf(dest))
+        loop(curr.left, curr :: acc)
+      else
+        Nil
+
+    loop(this, Nil)
+  }
 
 }
 
-object Coordinates {
-  val zero: Coordinates = Coordinates(0, 0)
+object Point {
+
+  implicit val order: Ordering[Point] =
+    Ordering.by(coord => (coord.row, coord.col))
+
+  val zero: Point = Point(0, 0)
+
 }
 
-final case class Grid[A](cells: Map[Coordinates, A]) {
+final case class Grid[A](cells: Map[Point, A]) {
+
+  lazy val height: Int = cells.keySet.map(_.row).max + 1
+  lazy val width: Int  = cells.keySet.map(_.col).max + 1
 
   lazy val rows: Map[Int, Map[Int, A]] = {
-    val group: ((Coordinates, A)) => Int       = { case (coord, _) => coord.row }
-    val map: ((Coordinates, A)) => Map[Int, A] = { case (coord, cell) => Map(coord.col -> cell) }
+    val group: ((Point, A)) => Int       = { case (coord, _) => coord.row }
+    val map: ((Point, A)) => Map[Int, A] = { case (coord, cell) => Map(coord.col -> cell) }
     val reduce: (Map[Int, A], Map[Int, A]) => Map[Int, A] = _ ++ _
 
     cells.groupMapReduce(group)(map)(reduce)
   }
 
   lazy val columns: Map[Int, Map[Int, A]] = {
-    val group: ((Coordinates, A)) => Int       = { case (coord, _) => coord.col }
-    val map: ((Coordinates, A)) => Map[Int, A] = { case (coord, cell) => Map(coord.row -> cell) }
+    val group: ((Point, A)) => Int       = { case (coord, _) => coord.col }
+    val map: ((Point, A)) => Map[Int, A] = { case (coord, cell) => Map(coord.row -> cell) }
     val reduce: (Map[Int, A], Map[Int, A]) => Map[Int, A] = _ ++ _
 
     cells.groupMapReduce(group)(map)(reduce)
   }
 
-  lazy val adjacents: Map[Coordinates, Map[Coordinates, A]] =
+  lazy val adjacents: Map[Point, Map[Point, A]] =
     cells.map { case (coordinate, _) =>
-      val neighbors: Map[Coordinates, A] = coordinate.neighbors
+      val neighbors: Map[Point, A] = coordinate.neighbors
         .filter(cells.contains)
         .flatMap(coord => this(coord).map(coord -> _))
         .toMap
@@ -43,22 +75,16 @@ final case class Grid[A](cells: Map[Coordinates, A]) {
       coordinate -> neighbors
     }
 
-  def apply(coord: Coordinates): Option[A] =
+  def apply(coord: Point): Option[A] =
     cells.get(coord)
 
-  def apply(row: Int, column: Int): Option[A] =
-    cells.get(Coordinates(row, column))
-
-  def +(v: (Coordinates, A)): Grid[A] =
+  def +(v: (Point, A)): Grid[A] =
     this.copy(cells = cells + v)
 
-  def map[B](f: (Coordinates, A) => B): List[B] =
+  def map[B](f: (Point, A) => B): List[B] =
     cells.map(f.tupled).to(List)
 
-  def filter(f: (Coordinates, A) => Boolean): Map[Coordinates, A] =
-    cells.filter(f.tupled)
-
-  def collect[B](f: (Coordinates, A) => Option[B]): List[B] =
+  def collect[B](f: (Point, A) => Option[B]): List[B] =
     cells.collect(f.tupled.unlift).to(List)
 
   def row(row: Int): List[A] =
@@ -67,16 +93,16 @@ final case class Grid[A](cells: Map[Coordinates, A]) {
   def column(col: Int): List[A] =
     columns.getOrElse(col, Map.empty).to(List).sortBy(_._1).map(_._2)
 
-  def topView(coord: Coordinates): List[A] =
+  def topView(coord: Point): List[A] =
     column(coord.col).take(coord.row).reverse
 
-  def leftView(coord: Coordinates): List[A] =
+  def leftView(coord: Point): List[A] =
     row(coord.row).take(coord.col).reverse
 
-  def bottomView(coord: Coordinates): List[A] =
+  def bottomView(coord: Point): List[A] =
     column(coord.col).drop(coord.row + 1)
 
-  def rightView(coord: Coordinates): List[A] =
+  def rightView(coord: Point): List[A] =
     row(coord.row).drop(coord.col + 1)
 
 }
@@ -86,9 +112,9 @@ object Grid {
   def empty[A]: Grid[A] = Grid(Map.empty)
 
   def fromRows[A](rows: Seq[Seq[A]]): Grid[A] = {
-    val indexed: Seq[(Coordinates, A)] = rows.zipWithIndex.flatMap { case (row, i) =>
+    val indexed: Seq[(Point, A)] = rows.zipWithIndex.flatMap { case (row, i) =>
       row.zipWithIndex.map { case (cell, j) =>
-        Coordinates(i, j) -> cell
+        Point(i, j) -> cell
       }
     }
 

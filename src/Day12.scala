@@ -4,28 +4,28 @@ import scala.collection.immutable.Queue
 
 object Day12 extends Day {
 
-  final case class HeightMap(grid: Grid[Int], start: Coordinates, end: Coordinates) {
+  final case class HeightMap(grid: Grid[Int], start: Point, end: Point) {
 
-    lazy val adjacents: Map[Coordinates, Set[Coordinates]] =
+    lazy val adjacents: Map[Point, Set[Point]] =
       grid.adjacents.map { case (coordinate, adjacents) =>
         val elevation = grid(coordinate).getOrElse(-1)
         val filtered  = adjacents.filter { case (_, e) => e <= elevation + 1 }
         coordinate -> filtered.keySet
       }
 
-    def withElevation(square: Coordinates, elevation: Int): HeightMap =
+    def withElevation(square: Point, elevation: Int): HeightMap =
       this.copy(grid = grid + (square -> elevation))
 
-    def withStart(square: Coordinates): HeightMap =
+    def withStart(square: Point): HeightMap =
       this.copy(start = square)
 
-    def withEnd(square: Coordinates): HeightMap =
+    def withEnd(square: Point): HeightMap =
       this.copy(end = square)
 
-    def shortestPathFromStart: List[Coordinates] =
+    def shortestPathFromStart: List[Point] =
       bfs(start, end)
 
-    def shortestPathFromElevation(elevation: Int): List[Coordinates] = {
+    def shortestPathFromElevation(elevation: Int): List[Point] = {
       grid
         .collect((s, e) => Option.when(e == elevation)(s))
         .map(start => bfs(start, end))
@@ -33,13 +33,13 @@ object Day12 extends Day {
         .minBy(_.size)
     }
 
-    private def bfs(start: Coordinates, end: Coordinates): List[Coordinates] = {
+    private def bfs(start: Point, end: Point): List[Point] = {
       @scala.annotation.tailrec
       def reconstruct(
-          cameFrom: Map[Coordinates, Coordinates],
-          current: Coordinates,
-          path: List[Coordinates]
-      ): List[Coordinates] = {
+          cameFrom: Map[Point, Point],
+          current: Point,
+          path: List[Point]
+      ): List[Point] = {
         if (current == start)
           start :: path
         else
@@ -48,9 +48,9 @@ object Day12 extends Day {
 
       @scala.annotation.tailrec
       def loop(
-          frontier: Queue[Coordinates],
-          cameFrom: Map[Coordinates, Coordinates]
-      ): List[Coordinates] =
+          frontier: Queue[Point],
+          cameFrom: Map[Point, Point]
+      ): List[Point] =
         frontier match {
           case `end` +: _ =>
             reconstruct(cameFrom, end, List.empty)
@@ -70,7 +70,7 @@ object Day12 extends Day {
 
   object HeightMap {
 
-    val empty = HeightMap(grid = Grid.empty[Int], start = Coordinates.zero, end = Coordinates.zero)
+    val empty = HeightMap(grid = Grid.empty[Int], start = Point.zero, end = Point.zero)
 
     def parse(lines: LazyList[String]): HeightMap = {
       def elevation(c: Char): Int = {
@@ -79,7 +79,7 @@ object Day12 extends Day {
       }
 
       @scala.annotation.tailrec
-      def loopLine(acc: HeightMap, line: List[Char], square: Coordinates): HeightMap =
+      def loopLine(acc: HeightMap, line: List[Char], square: Point): HeightMap =
         line match {
           case Nil         => acc
           case 'S' :: tail => loopLine(acc.withStart(square), 'a' :: tail, square)
@@ -92,7 +92,7 @@ object Day12 extends Day {
       def loop(acc: HeightMap, lines: LazyList[String], row: Int): HeightMap =
         lines match {
           case LazyList()    => acc
-          case line #:: tail => loop(loopLine(acc, line.toList, Coordinates(row, 0)), tail, row + 1)
+          case line #:: tail => loop(loopLine(acc, line.toList, Point(row, 0)), tail, row + 1)
         }
 
       loop(acc = HeightMap.empty, lines = lines, row = 0)
