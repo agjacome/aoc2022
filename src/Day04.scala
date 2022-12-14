@@ -1,16 +1,16 @@
 package dev.agjacome.aoc2022
 
-final case class RangePair(r1: Range, r2: Range) {
-
-  def fullyContains: Boolean =
-    r1.containsSlice(r2) || r2.containsSlice(r1)
-
-  def overlaps: Boolean =
-    r1.intersect(r2).nonEmpty
-
-}
-
 object Day04 extends Day {
+
+  final case class RangePair(r1: Range, r2: Range) {
+
+    def fullyContains: Boolean =
+      r1.containsSlice(r2) || r2.containsSlice(r1)
+
+    def overlaps: Boolean =
+      r1.intersect(r2).nonEmpty
+
+  }
 
   val LineRegex = """^(\d+)-(\d+),(\d+)-(\d+)$""".r
 
