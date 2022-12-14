@@ -1,76 +1,60 @@
 package dev.agjacome.aoc2022
 
-import predef._
-
-final case class Grid(rows: Seq[Seq[Int]]) {
-
-  val columns: Seq[Seq[Int]] = rows.transpose
-
-  val trees: Seq[Tree] =
-    (0 to rows.size - 1).flatMap { i =>
-      (0 to columns.size - 1).map { j =>
-        Tree(
-          height = rows(i)(j),
-          topView = topOf(i, j),
-          leftView = leftOf(i, j),
-          bottomView = bottomOf(i, j),
-          rightView = rightOf(i, j)
-        )
-      }
-    }
-
-  private def row(i: Int): Seq[Int]    = rows.lift(i).getOrElse(Seq.empty)
-  private def column(j: Int): Seq[Int] = columns.lift(j).getOrElse(Seq.empty)
-
-  private def topOf(i: Int, j: Int): Seq[Int]    = column(j).take(i).reverse
-  private def leftOf(i: Int, j: Int): Seq[Int]   = row(i).take(j).reverse
-  private def bottomOf(i: Int, j: Int): Seq[Int] = column(j).drop(i + 1)
-  private def rightOf(i: Int, j: Int): Seq[Int]  = row(i).drop(j + 1)
-
-}
-
-object Grid {
-
-  def parse(lines: LazyList[String]): Grid =
-    Grid(rows = lines.map(_.map(_.asDigit)))
-
-}
-
-final case class Tree(
-    height: Int,
-    topView: Seq[Int],
-    leftView: Seq[Int],
-    bottomView: Seq[Int],
-    rightView: Seq[Int]
-) {
-
-  val isVisible: Boolean = {
-    val top    = topView.forall(_ < height)
-    val left   = leftView.forall(_ < height)
-    val bottom = bottomView.forall(_ < height)
-    val right  = rightView.forall(_ < height)
-
-    top || left || bottom || right
-  }
-
-  val scenicScore: Int = {
-    val top    = topView.takeUntil(_ < height).size
-    val left   = leftView.takeUntil(_ < height).size
-    val bottom = bottomView.takeUntil(_ < height).size
-    val right  = rightView.takeUntil(_ < height).size
-
-    top * left * bottom * right
-  }
-
-}
+import dev.agjacome.aoc2022.predef._
 
 object Day08 extends Day {
 
-  def run(lines: LazyList[String]): Result = {
-    val grid = Grid.parse(lines)
+  final case class Tree(
+      height: Int,
+      topView: Seq[Int],
+      leftView: Seq[Int],
+      bottomView: Seq[Int],
+      rightView: Seq[Int]
+  ) {
 
-    val part1 = grid.trees.count(_.isVisible)
-    val part2 = grid.trees.map(_.scenicScore).max
+    val isVisible: Boolean = {
+      val top    = topView.forall(_ < height)
+      val left   = leftView.forall(_ < height)
+      val bottom = bottomView.forall(_ < height)
+      val right  = rightView.forall(_ < height)
+
+      top || left || bottom || right
+    }
+
+    val scenicScore: Int = {
+      val top    = topView.takeUntil(_ < height).size
+      val left   = leftView.takeUntil(_ < height).size
+      val bottom = bottomView.takeUntil(_ < height).size
+      val right  = rightView.takeUntil(_ < height).size
+
+      top * left * bottom * right
+    }
+
+  }
+
+  object Tree {
+
+    def fromHeightGrid(grid: Grid[Int]): List[Tree] =
+      grid.map { case (coord, cell) =>
+        Tree(
+          height = cell,
+          topView = grid.topView(coord),
+          leftView = grid.leftView(coord),
+          bottomView = grid.bottomView(coord),
+          rightView = grid.rightView(coord)
+        )
+      }
+
+  }
+
+  def run(lines: LazyList[String]): Result = {
+    val rows = lines.map(_.map(_.asDigit))
+    val grid = Grid.fromRows(rows)
+
+    val trees = Tree.fromHeightGrid(grid)
+
+    val part1 = trees.count(_.isVisible)
+    val part2 = trees.map(_.scenicScore).max
 
     Result(part1.toString, part2.toString)
   }

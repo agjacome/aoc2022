@@ -2,63 +2,42 @@ package dev.agjacome.aoc2022
 
 import scala.collection.immutable.Queue
 
-final case class Square(row: Int, col: Int) {
+final case class HeightMap(grid: Grid[Int], start: Coordinates, end: Coordinates) {
 
-  def up: Square    = this.copy(row = row - 1)
-  def down: Square  = this.copy(row = row + 1)
-  def left: Square  = this.copy(col = col - 1)
-  def right: Square = this.copy(col = col + 1)
-
-  def neighbors: Set[Square] = Set(up, down, left, right)
-
-}
-
-object Square {
-  val zero: Square = Square(0, 0)
-}
-
-final case class HeightMap(
-    elevations: Map[Square, Int],
-    start: Square,
-    end: Square
-) {
-
-  lazy val adjacents: Map[Square, Set[Square]] =
-    elevations.map { case (source, elevation) =>
-      val neighbors = source.neighbors.filter { destination =>
-        elevations.get(destination).exists(_ <= elevation + 1)
-      }
-
-      source -> neighbors
+  lazy val adjacents: Map[Coordinates, Set[Coordinates]] =
+    grid.adjacents.map { case (coordinate, adjacents) =>
+      val elevation = grid(coordinate).getOrElse(-1)
+      val filtered  = adjacents.filter { case (_, e) => e <= elevation + 1 }
+      coordinate -> filtered.keySet
     }
 
-  def withElevation(square: Square, elevation: Int): HeightMap =
-    this.copy(elevations = elevations + (square -> elevation))
+  def withElevation(square: Coordinates, elevation: Int): HeightMap =
+    this.copy(grid = grid + (square -> elevation))
 
-  def withStart(square: Square): HeightMap =
+  def withStart(square: Coordinates): HeightMap =
     this.copy(start = square)
 
-  def withEnd(square: Square): HeightMap =
+  def withEnd(square: Coordinates): HeightMap =
     this.copy(end = square)
 
-  def shortestPathFromStart: List[Square] =
+  def shortestPathFromStart: List[Coordinates] =
     bfs(start, end)
 
-  def shortestPathFromElevation(elevation: Int): List[Square] =
-    elevations
-      .collect { case (square, `elevation`) => square }
+  def shortestPathFromElevation(elevation: Int): List[Coordinates] = {
+    grid
+      .collect((s, e) => Option.when(e == elevation)(s))
       .map(start => bfs(start, end))
       .filter(_.nonEmpty)
       .minBy(_.size)
+  }
 
-
-  private def bfs(start: Square, end: Square): List[Square] = {
+  private def bfs(start: Coordinates, end: Coordinates): List[Coordinates] = {
     @scala.annotation.tailrec
     def reconstruct(
-        cameFrom: Map[Square, Square],
-        current: Square,
-        path: List[Square]
-    ): List[Square] = {
+        cameFrom: Map[Coordinates, Coordinates],
+        current: Coordinates,
+        path: List[Coordinates]
+    ): List[Coordinates] = {
       if (current == start)
         start :: path
       else
@@ -66,7 +45,10 @@ final case class HeightMap(
     }
 
     @scala.annotation.tailrec
-    def loop(frontier: Queue[Square], cameFrom: Map[Square, Square]): List[Square] =
+    def loop(
+        frontier: Queue[Coordinates],
+        cameFrom: Map[Coordinates, Coordinates]
+    ): List[Coordinates] =
       frontier match {
         case `end` +: _ =>
           reconstruct(cameFrom, end, List.empty)
@@ -86,7 +68,7 @@ final case class HeightMap(
 
 object HeightMap {
 
-  val empty = HeightMap(elevations = Map.empty, start = Square.zero, end = Square.zero)
+  val empty = HeightMap(grid = Grid.empty[Int], start = Coordinates.zero, end = Coordinates.zero)
 
   def parse(lines: LazyList[String]): HeightMap = {
     def elevation(c: Char): Int = {
@@ -95,7 +77,7 @@ object HeightMap {
     }
 
     @scala.annotation.tailrec
-    def loopLine(acc: HeightMap, line: List[Char], square: Square): HeightMap =
+    def loopLine(acc: HeightMap, line: List[Char], square: Coordinates): HeightMap =
       line match {
         case Nil         => acc
         case 'S' :: tail => loopLine(acc.withStart(square), 'a' :: tail, square)
@@ -107,7 +89,7 @@ object HeightMap {
     def loop(acc: HeightMap, lines: LazyList[String], row: Int): HeightMap =
       lines match {
         case LazyList()    => acc
-        case line #:: tail => loop(loopLine(acc, line.toList, Square(row, 0)), tail, row + 1)
+        case line #:: tail => loop(loopLine(acc, line.toList, Coordinates(row, 0)), tail, row + 1)
       }
 
     loop(acc = HeightMap.empty, lines = lines, row = 0)

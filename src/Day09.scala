@@ -1,6 +1,6 @@
 package dev.agjacome.aoc2022
 
-import predef._
+import dev.agjacome.aoc2022.predef._
 
 sealed abstract class Direction(val dx: Int, val dy: Int)
 

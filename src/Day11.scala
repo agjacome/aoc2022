@@ -1,8 +1,8 @@
 package dev.agjacome.aoc2022
 
-import predef._
-
 import scala.collection.immutable.Queue
+
+import dev.agjacome.aoc2022.predef._
 
 sealed abstract class WorryLevel(level: Long) {
   def apply(itemLevel: Long): Long = itemLevel / this.level
