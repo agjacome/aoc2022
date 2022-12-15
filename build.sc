@@ -10,6 +10,7 @@ object Versions {
   val Scala = "2.13.10"
 
   val BetterMonadicFor = "0.3.1"
+  val ContextApplied   = "0.1.4"
   val KindProjector    = "0.13.2"
 
   val MUnit = "1.0.0-M7"
@@ -21,10 +22,12 @@ trait Module extends BaseModule {
 
   def scalaVersion = Versions.Scala
 
-  def scalaPluginIvyDeps = Agg(
-    ivy"com.olegpy::better-monadic-for:${Versions.BetterMonadicFor}",
-    ivy"org.typelevel:::kind-projector:${Versions.KindProjector}"
-  )
+  def scalacPluginIvyDeps =
+    super.scalacPluginIvyDeps() ++ Agg(
+      ivy"com.olegpy::better-monadic-for:${Versions.BetterMonadicFor}",
+      ivy"org.augustjune::context-applied:${Versions.ContextApplied}",
+      ivy"org.typelevel:::kind-projector:${Versions.KindProjector}"
+    )
 
   def scalacOptions = T(super.scalacOptions() :+ "-Ymacro-annotations")
 

@@ -4,8 +4,6 @@ object predef {
 
   implicit final class OrderedOps[A: Ordering](private val self: A) {
 
-    private val A = Ordering[A]
-
     def clamp(low: A, high: A): A =
       A.min(A.max(self, low), high)
 
