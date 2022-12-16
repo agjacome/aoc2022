@@ -1,11 +1,16 @@
 package dev.agjacome.aoc2022
 
-import dev.agjacome.aoc2022.Point.DistanceMetric._
+import dev.agjacome.aoc2022.util.Interval
+import dev.agjacome.aoc2022.util.Point
 
 object Day15 extends Day {
 
+  final case class Sensor(position: Point, closestBeacon: Point) {
 
-  final case class Sensor(position: Point, distanceToBeacon: Int) {
+    import Point.DistanceMetric._
+
+    val distanceToBeacon: Int =
+      position.distanceTo(closestBeacon, metric = Manhattan)
 
     def rowCoverage(row: Int): Option[Interval] = {
       val rowDifference = (row - position.row).abs
@@ -28,10 +33,7 @@ object Day15 extends Day {
         case SensorLine(sx, sy, bx, by) =>
           val sensor = Point(col = sx.toInt, row = sy.toInt)
           val beacon = Point(col = bx.toInt, row = by.toInt)
-
-          val distance = sensor.distanceTo(beacon, metric = Manhattan)
-
-          Some(Sensor(sensor, distance))
+          Some(Sensor(sensor, beacon))
 
         case _ => None
       }
@@ -43,15 +45,15 @@ object Day15 extends Day {
     private val maxRow = sensors.map(_.position.row).max
 
     def rowCoverage(row: Int): Set[Interval] = {
-      val intervals = sensors.flatMap(_.rowCoverage(row))
-      IntervalSet(intervals).disjointUnion
+      val intervals = sensors.flatMap(_.rowCoverage(row min maxRow))
+      Interval.disjointUnion(intervals)
     }
 
     def findDistressBeacon(rowCount: Int): Option[Point] =
-      (0 to Math.min(maxRow, rowCount))
-        .map(row => (row, this.rowCoverage(row)))
-        .find { case (_, rowCoverages) => rowCoverages.size > 1 }
-        .map { case (row, rowCoverages) => Point(row, rowCoverages.head.high + 1) }
+      (0 to (rowCount min maxRow))
+        .map { row => (row, rowCoverage(row)) }
+        .find { case (_, coverages) => coverages.size > 1 }
+        .map { case (row, coverages) => Point(row, coverages.head.high + 1) }
 
   }
 
@@ -64,57 +66,11 @@ object Day15 extends Day {
 
   }
 
-  final case class Interval(low: Int, high: Int) {
-
-    def overlaps(that: Interval): Boolean =
-      Math.max(this.low, that.low) <= Math.min(this.high, that.high)
-
-    def borders(that: Interval): Boolean =
-      Math.max(this.low, that.low) == Math.min(this.high, that.high) + 1
-
-    def union(that: Interval): Option[Interval] =
-      Option.when(this.overlaps(that) || this.borders(that)) {
-        val low  = Math.min(this.low, that.low)
-        val high = Math.max(this.high, that.high)
-        Interval(low, high)
-      }
-
-    def size: Int =
-      (high - low).abs
-
-  }
-
-  object Interval {
-    implicit val ord: Ordering[Interval] = Ordering.by(_.low)
-  }
-
-  final case class IntervalSet(intervals: Set[Interval]) {
-
-    lazy val disjointUnion: Set[Interval] = {
-      @scala.annotation.tailrec
-      def loop(prev: Interval, intervals: List[Interval], acc: Set[Interval]): Set[Interval] =
-        intervals match {
-          case Nil => acc + prev
-          case curr :: next =>
-            prev.union(curr) match {
-              case Some(union) => loop(union, next, acc)
-              case None        => loop(curr, next, acc + prev)
-            }
-        }
-
-      intervals.to(List).sorted match {
-        case head :: tail => loop(head, tail, Set.empty)
-        case Nil          => Set.empty
-      }
-    }
-
-  }
-
   def run(lines: LazyList[String]): Result = {
     val sensors = SensorSet.parse(lines)
 
     val part1 = {
-      val row      = 10 // 2_000_000
+      val row      = 2_000_000
       val coverage = sensors.rowCoverage(row)
 
       coverage.headOption.fold(-1)(_.size)

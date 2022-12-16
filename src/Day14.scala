@@ -1,5 +1,8 @@
 package dev.agjacome.aoc2022
 
+import dev.agjacome.aoc2022.util.Grid
+import dev.agjacome.aoc2022.util.Point
+
 object Day14 extends Day {
 
   sealed abstract class Material

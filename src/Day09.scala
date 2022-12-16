@@ -1,6 +1,6 @@
 package dev.agjacome.aoc2022
 
-import dev.agjacome.aoc2022.predef._
+import dev.agjacome.aoc2022.util.ops._
 
 object Day09 extends Day {
 

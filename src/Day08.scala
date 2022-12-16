@@ -1,60 +1,69 @@
 package dev.agjacome.aoc2022
 
-import dev.agjacome.aoc2022.predef._
+import dev.agjacome.aoc2022.util.Grid
+import dev.agjacome.aoc2022.util.Point
+import dev.agjacome.aoc2022.util.ops._
 
 object Day08 extends Day {
 
-  final case class Tree(
-      height: Int,
-      topView: Seq[Int],
-      leftView: Seq[Int],
-      bottomView: Seq[Int],
-      rightView: Seq[Int]
-  ) {
+  type TreeHeight  = Int
+  type ScenicScore = Int
 
-    val isVisible: Boolean = {
-      val top    = topView.forall(_ < height)
-      val left   = leftView.forall(_ < height)
-      val bottom = bottomView.forall(_ < height)
-      val right  = rightView.forall(_ < height)
+  final case class Forest(trees: Grid[TreeHeight]) extends AnyVal {
 
-      top || left || bottom || right
+    def visibleTrees: List[TreeHeight] = {
+      def isVisible(p: Point, h: TreeHeight) = {
+        def top    = topView(p).forall(_ < h)
+        def left   = leftView(p).forall(_ < h)
+        def bottom = bottomView(p).forall(_ < h)
+        def right  = rightView(p).forall(_ < h)
+
+        top || left || bottom || right
+      }
+
+      trees.filter(isVisible).values
     }
 
-    val scenicScore: Int = {
-      val top    = topView.takeUntil(_ < height).size
-      val left   = leftView.takeUntil(_ < height).size
-      val bottom = bottomView.takeUntil(_ < height).size
-      val right  = rightView.takeUntil(_ < height).size
+    def scenicScores: Grid[ScenicScore] = {
+      def scenicScore(p: Point, h: TreeHeight) = {
+        val top    = topView(p).takeUntil(_ < h).size
+        val left   = leftView(p).takeUntil(_ < h).size
+        val bottom = bottomView(p).takeUntil(_ < h).size
+        val right  = rightView(p).takeUntil(_ < h).size
 
-      top * left * bottom * right
+        (p -> top * left * bottom * right)
+      }
+
+      trees.map(scenicScore)
     }
+
+    private def topView(p: Point)    = column(p.col).take(p.row).reverse
+    private def bottomView(p: Point) = column(p.col).drop(p.row + 1)
+    private def leftView(p: Point)   = row(p.row).take(p.col).reverse
+    private def rightView(p: Point)  = row(p.row).drop(p.col + 1)
+
+    private def row(row: Int): List[TreeHeight] =
+      trees.rows.getOrElse(row, Map.empty).to(List).sortBy(_._1).map(_._2)
+
+    private def column(col: Int): List[TreeHeight] =
+      trees.columns.getOrElse(col, Map.empty).to(List).sortBy(_._1).map(_._2)
 
   }
 
-  object Tree {
+  object Forest {
 
-    def fromHeightGrid(grid: Grid[Int]): List[Tree] =
-      grid.map { case (coord, cell) =>
-        Tree(
-          height = cell,
-          topView = grid.topView(coord),
-          leftView = grid.leftView(coord),
-          bottomView = grid.bottomView(coord),
-          rightView = grid.rightView(coord)
-        )
-      }
+    def parse(lines: LazyList[String]): Forest = {
+      val grid = Grid.fromRows(lines.map(_.map(_.asDigit)))
+      Forest(grid)
+    }
 
   }
 
   def run(lines: LazyList[String]): Result = {
-    val rows = lines.map(_.map(_.asDigit))
-    val grid = Grid.fromRows(rows)
+    val forest = Forest.parse(lines)
 
-    val trees = Tree.fromHeightGrid(grid)
-
-    val part1 = trees.count(_.isVisible)
-    val part2 = trees.map(_.scenicScore).max
+    val part1 = forest.visibleTrees.size
+    val part2 = forest.scenicScores.values.max
 
     Result(part1.toString, part2.toString)
   }

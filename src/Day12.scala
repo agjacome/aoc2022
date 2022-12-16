@@ -1,6 +1,8 @@
 package dev.agjacome.aoc2022
 
-import scala.collection.immutable.Queue
+import dev.agjacome.aoc2022.util.BFS
+import dev.agjacome.aoc2022.util.Grid
+import dev.agjacome.aoc2022.util.Point
 
 object Day12 extends Day {
 
@@ -13,8 +15,8 @@ object Day12 extends Day {
         coordinate -> filtered.keySet
       }
 
-    def withElevation(square: Point, elevation: Int): HeightMap =
-      this.copy(grid = grid + (square -> elevation))
+    def +(kv: (Point, Int)): HeightMap =
+      this.copy(grid = grid + kv)
 
     def withStart(square: Point): HeightMap =
       this.copy(start = square)
@@ -23,48 +25,17 @@ object Day12 extends Day {
       this.copy(end = square)
 
     def shortestPathFromStart: List[Point] =
-      bfs(start, end)
-
-    def shortestPathFromElevation(elevation: Int): List[Point] = {
-      grid
-        .collect((s, e) => Option.when(e == elevation)(s))
-        .map(start => bfs(start, end))
-        .filter(_.nonEmpty)
-        .minBy(_.size)
-    }
-
-    private def bfs(start: Point, end: Point): List[Point] = {
-      @scala.annotation.tailrec
-      def reconstruct(
-          cameFrom: Map[Point, Point],
-          current: Point,
-          path: List[Point]
-      ): List[Point] = {
-        if (current == start)
-          start :: path
-        else
-          reconstruct(cameFrom, cameFrom(current), current :: path)
+      BFS(start, end, adjacents) match {
+        case BFS.Path.Found(path, _) => path
+        case BFS.Path.NotFound(_)    => Nil
       }
 
-      @scala.annotation.tailrec
-      def loop(
-          frontier: Queue[Point],
-          cameFrom: Map[Point, Point]
-      ): List[Point] =
-        frontier match {
-          case `end` +: _ =>
-            reconstruct(cameFrom, end, List.empty)
-
-          case current +: tail =>
-            val next = adjacents(current).filterNot(cameFrom.contains)
-            loop(tail ++ next, cameFrom ++ next.map(_ -> current))
-
-          case _ =>
-            List.empty
-        }
-
-      loop(Queue(start), Map(start -> start))
-    }
+    def shortestPathFromElevation(elevation: Int): List[Point] =
+      grid
+        .collect((s, e) => Option.when(e == elevation)(s))
+        .map(start => BFS(start, end, adjacents))
+        .collect { case BFS.Path.Found(path, _) => path }
+        .minBy(_.size)
 
   }
 
@@ -84,8 +55,7 @@ object Day12 extends Day {
           case Nil         => acc
           case 'S' :: tail => loopLine(acc.withStart(square), 'a' :: tail, square)
           case 'E' :: tail => loopLine(acc.withEnd(square), 'z' :: tail, square)
-          case chr :: tail =>
-            loopLine(acc.withElevation(square, elevation(chr)), tail, square.right)
+          case chr :: tail => loopLine(acc + (square -> elevation(chr)), tail, square.right)
         }
 
       @scala.annotation.tailrec

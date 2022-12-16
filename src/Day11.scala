@@ -2,7 +2,7 @@ package dev.agjacome.aoc2022
 
 import scala.collection.immutable.Queue
 
-import dev.agjacome.aoc2022.predef._
+import dev.agjacome.aoc2022.util.ops._
 
 object Day11 extends Day {
 

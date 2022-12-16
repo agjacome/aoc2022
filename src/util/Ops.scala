@@ -1,6 +1,7 @@
 package dev.agjacome.aoc2022
+package util
 
-object predef {
+object ops {
 
   implicit final class OrderedOps[A: Ordering](private val self: A) {
 
