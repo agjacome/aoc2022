@@ -33,9 +33,31 @@ final case class Point(row: Int, col: Int) {
     loop(this, Nil)
   }
 
+  def distanceTo[A](that: Point, metric: Point.DistanceMetric[A]): A = {
+    import Point.DistanceMetric._
+
+    metric match {
+      case Euclidean =>
+        Math.sqrt(
+          Math.pow((this.row - that.row).toDouble, 2) +
+            Math.pow((this.col - that.col).toDouble, 2)
+        )
+
+      case Manhattan =>
+        (this.row - that.row).abs + (this.col - that.col).abs
+    }
+  }
+
 }
 
 object Point {
+
+  sealed trait DistanceMetric[A]
+
+  object DistanceMetric {
+    case object Euclidean extends DistanceMetric[Double]
+    case object Manhattan extends DistanceMetric[Int]
+  }
 
   implicit val order: Ordering[Point] =
     Ordering.by(coord => (coord.row, coord.col))
