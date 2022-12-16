@@ -1,5 +1,6 @@
 package dev.agjacome.aoc2022
 
+import dev.agjacome.aoc2022.util.Point
 import dev.agjacome.aoc2022.util.ops._
 
 object Day09 extends Day {
@@ -26,36 +27,31 @@ object Day09 extends Day {
 
   }
 
-  final case class Knot(x: Int, y: Int) {
+  final case class Knot(position: Point) extends AnyVal {
 
-    def position: (Int, Int) = (x, y)
-
-    def move(dir: Direction): Knot =
-      Knot(x + dir.dx, y + dir.dy)
+    def move(dir: Direction): Knot = {
+      Knot(position + Point(dir.dy, dir.dx))
+    }
 
     def pull(head: Knot): Knot = {
-      val dx = (head.x - x)
-      val dy = (head.y - y)
+      val dx = (head.position.col - position.col)
+      val dy = (head.position.row - position.row)
 
       if (dx.abs <= 1 && dy.abs <= 1)
         this
-      else
-        Knot(x + dx.clamp(-1, 1), y + dy.clamp(-1, 1))
+      else {
+        val increment = Point(dy.clamp(-1, 1), dx.clamp(-1, 1))
+        Knot(position + increment)
+      }
     }
 
   }
 
-  object Knot {
-
-    val zero = Knot(0, 0)
-
-  }
-
-  final case class Rope(head: Knot, trail: List[Knot], visited: Set[(Int, Int)]) {
+  final case class Rope(head: Knot, trail: List[Knot], visited: Set[Point]) {
 
     def pull(direction: Direction): Rope = {
       @scala.annotation.tailrec
-      def loop(head: Knot, trail: List[Knot], acc: List[Knot]): (List[Knot], Set[(Int, Int)]) =
+      def loop(head: Knot, trail: List[Knot], acc: List[Knot]): (List[Knot], Set[Point]) =
         trail match {
           case trailHead :: trailTail =>
             val pulled = trailHead.pull(head)
@@ -78,9 +74,9 @@ object Day09 extends Day {
 
     def size(size: Int) =
       Rope(
-        head = Knot.zero,
-        trail = List.fill(size - 1)(Knot.zero),
-        visited = Set(Knot.zero.position)
+        head = Knot(Point.zero),
+        trail = List.fill(size - 1)(Knot(Point.zero)),
+        visited = Set(Point.zero)
       )
 
   }

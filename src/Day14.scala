@@ -12,13 +12,13 @@ object Day14 extends Day {
     case object Sand extends Material
   }
 
-  final case class Cave(grid: Grid[Material], bottom: Int) {
+  final case class Cave(grid: Grid[Material], floor: Int) {
 
     def +(kv: (Point, Material)): Cave =
       this.copy(grid = grid + kv)
 
-    def withBottomAt(row: Int): Cave =
-      this.copy(bottom = row)
+    def withFloorAt(row: Int): Cave =
+      this.copy(floor = row)
 
     def isBlocked(p: Point): Boolean =
       fallPoint(p).isEmpty
@@ -29,22 +29,20 @@ object Day14 extends Day {
     def percolate(src: Point, until: (Cave, Point) => Boolean): Cave = {
       @scala.annotation.tailrec
       def loop(curr: Point, cave: Cave): Cave =
-        if (until(cave, curr)) {
+        if (until(cave, curr))
           cave
-        } else {
+        else
           cave.fallPoint(curr) match {
             case Some(dest) => loop(dest, cave)
             case None       => loop(src, cave + (curr -> Material.Sand))
           }
-        }
 
       loop(src, this)
     }
 
     private def fallPoint(src: Point): Option[Point] =
       List(src.down, src.down.left, src.down.right)
-        .filter(_.row <= bottom)
-        .find(grid(_).isEmpty)
+        .find(p => p.row <= floor && grid(p).isEmpty)
 
   }
 
@@ -76,11 +74,11 @@ object Day14 extends Day {
     val source = Point(0, 500)
 
     val part1 = cave
-      .percolate(source, until = (_, p) => p.row == cave.bottom)
+      .percolate(source, until = (_, p) => p.row == cave.floor)
       .count(Material.Sand)
 
     val part2 = cave
-      .withBottomAt(cave.grid.height)
+      .withFloorAt(cave.grid.height)
       .percolate(source, until = (c, p) => p == source && c.isBlocked(p))
       .count(Material.Sand) + 1
 

@@ -3,6 +3,22 @@ package util
 
 object ops {
 
+  implicit final class CharOps(private val self: Char) extends AnyVal {
+
+    def toAlphabetInt: Option[Int] = {
+      val lowerBase = 'a'.toInt - 1
+      val upperBase = 'A'.toInt - 27
+
+      if (self.isLower)
+        Some(self.toInt - lowerBase)
+      else if (self.isUpper)
+        Some(self.toInt - upperBase)
+      else
+        None
+    }
+
+  }
+
   implicit final class OrderedOps[A: Ordering](private val self: A) {
 
     def clamp(low: A, high: A): A =
@@ -20,8 +36,10 @@ object ops {
   }
 
   implicit final class MapOps[A, B](private val self: Map[A, B]) extends AnyVal {
+
     def updating(k: A)(f: B => B): Map[A, B] =
       self.updatedWith(k)(_.map(f))
+
   }
 
 }

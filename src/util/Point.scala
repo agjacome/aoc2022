@@ -3,6 +3,9 @@ package util
 
 final case class Point(row: Int, col: Int) {
 
+  def +(that: Point): Point =
+    Point(this.row + that.row, this.col + that.col)
+
   def up: Point    = this.copy(row = row - 1)
   def down: Point  = this.copy(row = row + 1)
   def left: Point  = this.copy(col = col - 1)
@@ -10,39 +13,31 @@ final case class Point(row: Int, col: Int) {
 
   def neighbors: Set[Point] = Set(up, down, left, right)
 
-  def isUpOf(that: Point): Boolean    = this.row < that.row && this.col == that.col
-  def isDownOf(that: Point): Boolean  = this.row > that.row && this.col == that.col
-  def isLeftOf(that: Point): Boolean  = this.col < that.col && this.row == that.row
-  def isRightOf(that: Point): Boolean = this.col > that.col && this.row == that.row
-
   def lineTo(dest: Point): List[Point] = {
     @scala.annotation.tailrec
     def loop(curr: Point, acc: List[Point]): List[Point] =
-      if (curr == dest)
+      if (curr == dest) {
         (dest :: acc).reverse
-      else if (curr.isUpOf(dest))
-        loop(curr.down, curr :: acc)
-      else if (curr.isDownOf(dest))
-        loop(curr.up, curr :: acc)
-      else if (curr.isLeftOf(dest))
-        loop(curr.right, curr :: acc)
-      else if (curr.isRightOf(dest))
-        loop(curr.left, curr :: acc)
-      else
+      } else if (curr.col == dest.col) {
+        val next = if (curr.row < dest.row) curr.down else curr.up
+        loop(next, curr :: acc)
+      } else if (curr.row == dest.row) {
+        val next = if (curr.col < dest.col) curr.right else curr.left
+        loop(next, curr :: acc)
+      } else {
         Nil
+      }
 
     loop(this, Nil)
   }
 
   def distanceTo[A](that: Point, metric: Point.DistanceMetric[A]): A = {
+    import java.lang.Math._
     import Point.DistanceMetric._
 
     metric match {
       case Euclidean =>
-        Math.sqrt(
-          Math.pow((this.row - that.row).toDouble, 2) +
-            Math.pow((this.col - that.col).toDouble, 2)
-        )
+        sqrt(pow((this.row - that.row).toDouble, 2) + pow((this.col - that.col).toDouble, 2))
 
       case Manhattan =>
         (this.row - that.row).abs + (this.col - that.col).abs

@@ -3,6 +3,7 @@ package dev.agjacome.aoc2022
 import dev.agjacome.aoc2022.util.BFS
 import dev.agjacome.aoc2022.util.Grid
 import dev.agjacome.aoc2022.util.Point
+import dev.agjacome.aoc2022.util.ops._
 
 object Day12 extends Day {
 
@@ -44,10 +45,7 @@ object Day12 extends Day {
     val empty = HeightMap(grid = Grid.empty[Int], start = Point.zero, end = Point.zero)
 
     def parse(lines: LazyList[String]): HeightMap = {
-      def elevation(c: Char): Int = {
-        val base = 'a'.toInt - 1
-        if (c.isLower) c.toInt - base else 0
-      }
+      def elevation(c: Char): Int = c.toAlphabetInt.getOrElse(-1)
 
       @scala.annotation.tailrec
       def loopLine(acc: HeightMap, line: List[Char], square: Point): HeightMap =

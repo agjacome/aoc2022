@@ -1,25 +1,17 @@
 package dev.agjacome.aoc2022
 
+import dev.agjacome.aoc2022.util.Interval
+
 object Day04 extends Day {
 
-  final case class RangePair(r1: Range, r2: Range) {
+  private val RangeLine = """^(\d+)-(\d+),(\d+)-(\d+)$""".r
 
-    def fullyContains: Boolean =
-      r1.containsSlice(r2) || r2.containsSlice(r1)
-
-    def overlaps: Boolean =
-      r1.intersect(r2).nonEmpty
-
-  }
-
-  val LineRegex = """^(\d+)-(\d+),(\d+)-(\d+)$""".r
-
-  def parseRangeLine(line: String): Option[RangePair] = {
+  def parse(line: String): Option[(Interval, Interval)] = {
     line match {
-      case LineRegex(min1, max1, min2, max2) =>
-        val left  = (min1.toInt to max1.toInt)
-        val right = (min2.toInt to max2.toInt)
-        Some(RangePair(left, right))
+      case RangeLine(min1, max1, min2, max2) =>
+        val left  = Interval(min1.toInt, max1.toInt)
+        val right = Interval(min2.toInt, max2.toInt)
+        Some((left, right))
 
       case _ =>
         None
@@ -27,10 +19,10 @@ object Day04 extends Day {
   }
 
   def run(lines: LazyList[String]): Result = {
-    val ranges = lines.flatMap(parseRangeLine)
+    val ranges = lines.flatMap(parse)
 
-    val part1 = ranges.count(_.fullyContains)
-    val part2 = ranges.count(_.overlaps)
+    val part1 = ranges.count { case (l, r) => l.contains(r) || r.contains(l) }
+    val part2 = ranges.count { case (l, r) => l.overlaps(r) }
 
     Result(part1.toString, part2.toString)
   }

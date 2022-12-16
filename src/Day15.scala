@@ -50,10 +50,12 @@ object Day15 extends Day {
     }
 
     def findDistressBeacon(rowCount: Int): Option[Point] =
-      (0 to (rowCount min maxRow))
-        .map { row => (row, rowCoverage(row)) }
-        .find { case (_, coverages) => coverages.size > 1 }
-        .map { case (row, coverages) => Point(row, coverages.head.high + 1) }
+      Iterator
+        .range(0, rowCount min maxRow)
+        .map(row => (row, rowCoverage(row)))
+        .collectFirst {
+          case (row, coverage) if coverage.size > 1 => Point(row, coverage.head.high + 1)
+        }
 
   }
 
