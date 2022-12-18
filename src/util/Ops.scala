@@ -1,6 +1,8 @@
 package dev.agjacome.aoc2022
 package util
 
+import scala.math.Ordering.Implicits._
+
 object ops {
 
   implicit final class CharOps(private val self: Char) extends AnyVal {
@@ -21,8 +23,11 @@ object ops {
 
   implicit final class OrderedOps[A: Ordering](private val self: A) {
 
+    def between(low: A, high: A): Boolean =
+      low <= self && self <= high
+
     def clamp(low: A, high: A): A =
-      A.min(A.max(self, low), high)
+      self.max(low).min(high)
 
   }
 
@@ -32,6 +37,9 @@ object ops {
       self.span(f) match {
         case (head, tail) => head ++ tail.take(1)
       }
+
+    def forever: LazyList[A] =
+      LazyList.continually(self).flatten
 
   }
 
