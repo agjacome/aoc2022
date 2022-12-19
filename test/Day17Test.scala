@@ -6,6 +6,6 @@ final class Day17Test extends DayTest(Day17) {
     ">>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>"
   )
 
-  val expected = Result("3068", "")
+  val expected = Result("3068", "1514285714288")
 
 }

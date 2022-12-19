@@ -13,13 +13,36 @@ object Day17 extends Day {
 
   }
 
-  sealed abstract class Direction(val move: Array[Byte] => Array[Byte])
+  sealed trait Direction {
+    def move(rows: Array[Byte]): Array[Byte]
+  }
 
   object Direction {
 
-    case object Down  extends Direction(b"0000000" +: _)
-    case object Left  extends Direction(_.map(b => if ((b & b"1000000") > 0) b else (b << 1).toByte))
-    case object Right extends Direction(_.map(b => if ((b & b"0000001") > 0) b else (b >> 1).toByte))
+    case object Down extends Direction {
+
+      def move(rows: Array[Byte]): Array[Byte] =
+        b"0000000" +: rows
+
+    }
+
+    case object Left extends Direction {
+
+      def move(rows: Array[Byte]): Array[Byte] = {
+        val overflows = rows.exists(b => (b & b"1000000") > 0)
+        if (overflows) rows else rows.map(b => (b << 1).toByte)
+      }
+
+    }
+
+    case object Right extends Direction {
+
+      def move(rows: Array[Byte]): Array[Byte] = {
+        val overflows = rows.exists(b => (b & b"0000001") > 0)
+        if (overflows) rows else rows.map(b => (b >> 1).toByte)
+      }
+
+    }
 
     val fromSymbol: Char => Option[Direction] =
       Map('<' -> Left, '>' -> Right).get
@@ -28,12 +51,8 @@ object Day17 extends Day {
 
   final case class Rock(rows: Array[Byte]) extends AnyVal {
 
-    def height = rows.size
-
-    def move(direction: Direction): Rock = {
-      val moved = direction.move(rows)
-      if (moved.forall(_ >= 0)) Rock(moved) else this
-    }
+    def height: Int =
+      rows.dropWhile(_ == 0).size
 
   }
 
@@ -53,40 +72,44 @@ object Day17 extends Day {
 
   final case class Chamber(rows: Array[Byte], jets: List[Direction]) {
 
-    def towerHeight: Int =
-      rows.dropWhile(_ == 0).size - 1
+    def height: Int =
+      rows.dropWhile(_ == 0).size
 
-    def dropRocks(count: Int): Chamber = {
+    def dropRocks(count: Long): Chamber = {
       @scala.annotation.tailrec
       def loop(
-        countdown: Int,
-        rocks: LazyList[Rock],
-        directions: LazyList[Direction],
-        chamber: Chamber
+          countdown: Long,
+          rocks: LazyList[Rock],
+          dirs: LazyList[Direction],
+          chamber: Chamber
       ): Chamber = {
-        println(s"${chamber}\n")
         (countdown, rocks) match {
           case (0, _) | (_, LazyList()) =>
             chamber
 
           case (_, rock #:: nextRocks) =>
-            val (nextChamber, nextDirs) = chamber.pad.moveUntilLanded(rock, directions)
-            loop(countdown - 1, nextRocks, nextDirs, nextChamber)
+            val padded            = chamber.makeSpaceFor(rock)
+            val (moved, nextDirs) = padded.moveUntilLanded(rock, dirs)
+
+            loop(countdown - 1, nextRocks, nextDirs, moved)
         }
       }
 
       loop(count, Rock.shapes.forever, jets.forever, this)
     }
 
-    def pad: Chamber = {
-      val topRock = rows.indexWhere(_ != 0)
-      val padding = Array.fill(4 - topRock)(b"0000000")
+    private def makeSpaceFor(rock: Rock): Chamber = {
+      val trimmed = rows.dropWhile(_ == 0)
+      val padding = Array.fill(rock.height + 3)(b"0000000")
 
-      this.copy(rows = padding ++ rows)
+      this.copy(rows = padding ++ trimmed)
     }
 
     @scala.annotation.tailrec
-    private def moveUntilLanded(rock: Rock, directions: LazyList[Direction]): (Chamber, LazyList[Direction]) =
+    private def moveUntilLanded(
+        rock: Rock,
+        directions: LazyList[Direction]
+    ): (Chamber, LazyList[Direction]) =
       directions match {
         case direction #:: tail =>
           val movedByJet     = move(rock, direction)
@@ -103,7 +126,7 @@ object Day17 extends Day {
       }
 
     private def move(rock: Rock, direction: Direction): Rock = {
-      val moved  = rock.move(direction)
+      val moved  = Rock(direction.move(rock.rows))
       val zipped = this.zipWith(moved)
 
       val hasCollision = zipped.exists { case (x, y) => (x & y) > 0 }
@@ -141,11 +164,30 @@ object Day17 extends Day {
   }
 
   def run(lines: LazyList[String]): Result = {
-    val jets = lines.flatMap(_.flatMap(Direction.fromSymbol)).to(List)
+    val jets    = lines.flatMap(_.flatMap(Direction.fromSymbol)).to(List)
+    val chamber = Chamber.empty(jets)
 
-    val _ = Chamber.empty(jets).dropRocks(3)
+    val part1 = {
+      val rockCount = 2022L
+      val endState  = chamber.dropRocks(rockCount)
 
-    ???
+      // println(endState)
+
+      endState.height - 1
+    }
+
+    // unacceptable run time
+    // val part2 = {
+    //   val rockCount = 1_000_000_000_000L
+    //   val endState = chamber.dropRocks(rockCount)
+
+    //   // println(endState)
+
+    //   endState.height - 1
+    // }
+    val part2 = 42
+
+    Result(part1.toString, part2.toString)
   }
 
 }
