@@ -21,6 +21,13 @@ object ops {
 
   }
 
+  implicit final class ByteOps(private val self: Byte) extends AnyVal {
+
+    def toBitSeq: Seq[Boolean] =
+      (0 to 7).map(bit => ((self >> bit) & 1) == 1)
+
+  }
+
   implicit final class OrderedOps[A: Ordering](private val self: A) {
 
     def between(low: A, high: A): Boolean =
@@ -32,6 +39,9 @@ object ops {
   }
 
   implicit final class SeqOps[A](private val self: Seq[A]) extends AnyVal {
+
+    def indexed: Seq[Indexed[A]] =
+      self.zipWithIndex.map(Function.tupled(Indexed.apply))
 
     def takeUntil(f: A => Boolean): Seq[A] =
       self.span(f) match {
@@ -47,6 +57,15 @@ object ops {
 
     def updating(k: A)(f: B => B): Map[A, B] =
       self.updatedWith(k)(_.map(f))
+
+  }
+
+  implicit final class BinaryByteInterpolator(private val sc: StringContext) extends AnyVal {
+
+    def b(@scala.annotation.unused args: Any*): Byte = {
+      val string = sc.parts.iterator.mkString
+      java.lang.Byte.parseByte(string, 2)
+    }
 
   }
 

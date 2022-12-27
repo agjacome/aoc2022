@@ -1,17 +1,9 @@
 package dev.agjacome.aoc2022
 
+import dev.agjacome.aoc2022.util.Indexed
 import dev.agjacome.aoc2022.util.ops._
 
 object Day17 extends Day {
-
-  implicit final class BinaryByteInterpolator(private val sc: StringContext) extends AnyVal {
-
-    def b(@scala.annotation.unused args: Any*): Byte = {
-      val string = sc.parts.iterator.mkString
-      java.lang.Byte.parseByte(string, 2)
-    }
-
-  }
 
   sealed trait Direction {
     def move(rows: Array[Byte]): Array[Byte]
@@ -51,8 +43,7 @@ object Day17 extends Day {
 
   final case class Rock(rows: Array[Byte]) extends AnyVal {
 
-    def height: Int =
-      rows.dropWhile(_ == 0).size
+    def height: Int = rows.dropWhile(_ == 0).size
 
   }
 
@@ -72,34 +63,71 @@ object Day17 extends Day {
 
   final case class Chamber(rows: Array[Byte], jets: List[Direction]) {
 
-    def height: Int =
-      rows.dropWhile(_ == 0).size
+    private val trimmed = rows.dropWhile(_ == 0)
+    private val height  = trimmed.size - 1
 
-    def dropRocks(count: Long): Chamber = {
+    private val columnPattern = {
+      val columnHeights = trimmed
+        .to(Seq)
+        .map(_.toBitSeq)
+        .transpose
+        .flatMap(_.indexed.collectFirst { case Indexed(true, i) => height - i })
+
+      val minHeight = columnHeights.min
+
+      columnHeights.map(_ - minHeight)
+    }
+
+    def dropRocks(total: Long): Long = {
+      type RockCount = Long
+      type JetIndex  = Int
+      type Jets      = LazyList[Indexed[Direction]]
+      type RockIndex = Int
+      type Rocks     = LazyList[Indexed[Rock]]
+      type State     = Map[(RockIndex, JetIndex), (Chamber, RockCount)]
+
       @scala.annotation.tailrec
       def loop(
-          countdown: Long,
-          rocks: LazyList[Rock],
-          dirs: LazyList[Direction],
-          chamber: Chamber
-      ): Chamber = {
-        (countdown, rocks) match {
-          case (0, _) | (_, LazyList()) =>
-            chamber
+          count: RockCount,
+          rocks: Rocks,
+          directions: Jets,
+          seen: State,
+          current: Chamber
+      ): Long =
+        if (count == total)
+          current.height.toLong
+        else {
+          val Indexed(rock, rockIndex) = rocks.head
+          val Indexed(_, jetIndex)     = directions.head
 
-          case (_, rock #:: nextRocks) =>
-            val padded            = chamber.makeSpaceFor(rock)
-            val (moved, nextDirs) = padded.moveUntilLanded(rock, dirs)
+          seen.get((rockIndex, jetIndex)) match {
+            case Some((chamber, start)) if chamber.columnPattern == current.columnPattern =>
+              val rocksPerCycle  = count - start
+              val heightPerCycle = current.height - chamber.height
+              val totalCycles    = total / rocksPerCycle
 
-            loop(countdown - 1, nextRocks, nextDirs, moved)
+              val pendingRocks  = total % rocksPerCycle
+              val pendingHeight = current.dropRocks(pendingRocks) - current.height
+
+              totalCycles * heightPerCycle + pendingHeight
+
+            case _ =>
+              val (landed, nextDirs) = current
+                .makeSpaceFor(rock)
+                .moveUntilLanded(rock, directions)
+
+              val newSeen = seen + ((rockIndex, jetIndex) -> (current, count))
+
+              loop(count + 1, rocks.tail, nextDirs, newSeen, landed)
+          }
         }
-      }
 
-      loop(count, Rock.shapes.forever, jets.forever, this)
+      val rocks = Rock.shapes.indexed.forever
+      val dirs  = jets.indexed.forever
+      loop(0, rocks, dirs, Map.empty, this)
     }
 
     private def makeSpaceFor(rock: Rock): Chamber = {
-      val trimmed = rows.dropWhile(_ == 0)
       val padding = Array.fill(rock.height + 3)(b"0000000")
 
       this.copy(rows = padding ++ trimmed)
@@ -108,10 +136,10 @@ object Day17 extends Day {
     @scala.annotation.tailrec
     private def moveUntilLanded(
         rock: Rock,
-        directions: LazyList[Direction]
-    ): (Chamber, LazyList[Direction]) =
+        directions: LazyList[Indexed[Direction]]
+    ): (Chamber, LazyList[Indexed[Direction]]) =
       directions match {
-        case direction #:: tail =>
+        case Indexed(direction, _) #:: tail =>
           val movedByJet     = move(rock, direction)
           val movedByGravity = move(movedByJet, Direction.Down)
 
@@ -144,16 +172,6 @@ object Day17 extends Day {
     private def zipWith(rock: Rock): Array[(Byte, Byte)] =
       this.rows.zipAll(rock.rows, b"0000000", b"0000000")
 
-    override def toString: String = {
-      def formatRow(b: Byte): String =
-        f"|${b.toInt.toBinaryString}%7s|"
-          .replace('0', '.')
-          .replace(' ', '.')
-          .replace('1', '#')
-
-      (rows.dropRight(1).map(formatRow) :+ "+-------+").mkString("\n")
-    }
-
   }
 
   object Chamber {
@@ -169,23 +187,13 @@ object Day17 extends Day {
 
     val part1 = {
       val rockCount = 2022L
-      val endState  = chamber.dropRocks(rockCount)
-
-      // println(endState)
-
-      endState.height - 1
+      chamber.dropRocks(rockCount)
     }
 
-    // unacceptable run time
-    // val part2 = {
-    //   val rockCount = 1_000_000_000_000L
-    //   val endState = chamber.dropRocks(rockCount)
-
-    //   // println(endState)
-
-    //   endState.height - 1
-    // }
-    val part2 = 42
+    val part2 = {
+      val rockCount = 1_000_000_000_000L
+      chamber.dropRocks(rockCount)
+    }
 
     Result(part1.toString, part2.toString)
   }
