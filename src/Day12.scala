@@ -1,8 +1,9 @@
 package dev.agjacome.aoc2022
 
-import dev.agjacome.aoc2022.util.BFS
 import dev.agjacome.aoc2022.util.Grid
 import dev.agjacome.aoc2022.util.Point
+import dev.agjacome.aoc2022.util.Search.BFS
+import dev.agjacome.aoc2022.util.Search.Path
 import dev.agjacome.aoc2022.util.ops._
 
 object Day12 extends Day {
@@ -27,15 +28,15 @@ object Day12 extends Day {
 
     def shortestPathFromStart: List[Point] =
       BFS(start, end, adjacents) match {
-        case BFS.Path.Found(path, _) => path
-        case BFS.Path.NotFound(_)    => Nil
+        case Path.Found(path, _) => path
+        case Path.NotFound(_)    => Nil
       }
 
     def shortestPathFromElevation(elevation: Int): List[Point] =
       grid
         .collect((s, e) => Option.when(e == elevation)(s))
         .map(start => BFS(start, end, adjacents))
-        .collect { case BFS.Path.Found(path, _) => path }
+        .collect { case Path.Found(path, _) => path }
         .minBy(_.size)
 
   }

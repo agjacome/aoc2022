@@ -1,7 +1,6 @@
 package dev.agjacome.aoc2022
 
-import scala.collection.immutable.Queue
-
+import dev.agjacome.aoc2022.util.Search.BFS
 import dev.agjacome.aoc2022.util.ops._
 
 object Day18 extends Day {
@@ -52,49 +51,37 @@ object Day18 extends Day {
 
     def surfaceArea: Int =
       droplets.foldLeft(0) { case (sum, droplet) =>
-        val neighbors = droplet.neighbors.filter(droplets.contains)
-        sum + 6 - neighbors.size
+        sum + (droplet.neighbors &~ droplets).size
       }
 
     def exteriorSurfaceArea: Int = {
-      @scala.annotation.tailrec
-      def loop(frontier: Queue[Point3D], visited: Set[Point3D], count: Int): Int = {
-        frontier match {
-          case `max` +: _ =>
-            count
+      var surface: Int = 0
 
-          case point +: tail =>
-            val neighbors = point.neighbors
-              .filterNot(visited.contains)
-              .filterNot(frontier.contains)
-              .filter(_.between(min, max))
+      BFS[Point3D](start = min, end = max, next = point => {
+        val neighbors       = point.neighbors.filter(_.between(min, max))
+        val (blocked, next) = neighbors.partition(droplets.contains)
 
-            val (exterior, next) = neighbors.partition(droplets.contains)
+        surface += blocked.size
 
-            loop(tail ++ next, visited + point, count + exterior.size)
+        next
+      })
 
-          case _ => count
-        }
-      }
-
-      loop(Queue(min), Set.empty, 0)
+      surface
     }
 
-    private val min: Point3D = {
-      val minX = droplets.map(_.x).min - 1
-      val minY = droplets.map(_.y).min - 1
-      val minZ = droplets.map(_.z).min - 1
+    private val min: Point3D =
+      Point3D(
+        x = droplets.map(_.x).min - 1,
+        y = droplets.map(_.y).min - 1,
+        z = droplets.map(_.z).min - 1
+      )
 
-      Point3D(minX, minY, minZ)
-    }
-
-    private val max: Point3D = {
-      val maxX = droplets.map(_.x).max + 1
-      val maxY = droplets.map(_.y).max + 1
-      val maxZ = droplets.map(_.z).max + 1
-
-      Point3D(maxX, maxY, maxZ)
-    }
+    private val max: Point3D =
+      Point3D(
+        x = droplets.map(_.x).max + 1,
+        y = droplets.map(_.y).max + 1,
+        z = droplets.map(_.z).max + 1
+      )
 
   }
 
