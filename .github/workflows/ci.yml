@@ -1,4 +1,4 @@
-name: Tests
+name: "AOC2022 CI"
 
 on:
   push:
@@ -6,11 +6,11 @@ on:
       - main
     paths-ignore:
       - "doc/**"
-      - "input/**"
       - "README.md"
 
 jobs:
-  tests:
+
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -22,4 +22,19 @@ jobs:
           name: aoc2022
           signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
       - name: "Run Tests"
-        run: nix-shell --run "mill _.test"
+        run: nix-shell --run "mill aoc2022.test"
+
+  run:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: cachix/install-nix-action@v17
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+      - uses: cachix/cachix-action@v11
+        with:
+          name: aoc2022
+          signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
+      - name: "Run with Input"
+        run: ./run_all.sh
