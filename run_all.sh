@@ -11,9 +11,7 @@ for input_file in input/*; do
     day=$(basename $input_file .txt)
 
     echo "=== DAY $day ==="
-    $fat_jar $day $input_file
-    echo "--------------"
-    times
+    time $fat_jar $day $input_file
     echo "=============="
     echo
 done
