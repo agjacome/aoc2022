@@ -22,11 +22,19 @@ object Day02 extends Day {
     case object Paper    extends Shape(score = 2) { val beats = Rock     }
     case object Scissors extends Shape(score = 3) { val beats = Paper    }
 
-    val fromOpponentSymbol: String => Option[Shape] =
-      Map("A" -> Rock, "B" -> Paper, "C" -> Scissors).get
+    val fromOpponentSymbol: Char => Shape = {
+      case 'A' => Rock
+      case 'B' => Paper
+      case 'C' => Scissors
+      case sym => sys.error(s"Unknown Shape symbol ${sym}")
+    }
 
-    val fromPlayerSymbol: String => Option[Shape] =
-      Map("X" -> Rock, "Y" -> Paper, "Z" -> Scissors).get
+    val fromPlayerSymbol: Char => Shape = {
+      case 'X' => Rock
+      case 'Y' => Paper
+      case 'Z' => Scissors
+      case sym => sys.error(s"Unknown Shape symbol ${sym}")
+    }
 
   }
 
@@ -47,34 +55,34 @@ object Day02 extends Day {
     case object Loss extends Outcome(0)
     case object Win  extends Outcome(6)
 
-    val fromPlayerSymbol: String => Option[Outcome] =
-      Map("X" -> Loss, "Y" -> Draw, "Z" -> Win).get
+    val fromPlayerSymbol: Char => Outcome = {
+      case 'X' => Loss
+      case 'Y' => Draw
+      case 'Z' => Win
+      case sym => sys.error(s"Unknown Outcome symbol ${sym}")
+    }
 
   }
 
   def run(lines: LazyList[String]): Result = {
     val symbols = lines
       .map(_.split(' '))
-      .collect { case Array(opponent, player) => (opponent, player) }
+      .collect { case Array(opponent, player) => (opponent.head, player.head) }
 
-    val part1 = symbols.flatMap { case (opponentSymbol, playerSymbol) =>
-      for {
-        opponent <- Shape.fromOpponentSymbol(opponentSymbol)
-        player   <- Shape.fromPlayerSymbol(playerSymbol)
+    val part1 = symbols.map { case (opponentSymbol, playerSymbol) =>
+      val opponent = Shape.fromOpponentSymbol(opponentSymbol)
+      val player   = Shape.fromPlayerSymbol(playerSymbol)
+      val outcome  = player.playAgainst(opponent)
 
-        outcome = player.playAgainst(opponent)
-        score   = outcome.score + player.score
-      } yield score
+      outcome.score + player.score
     }.sum
 
-    val part2 = symbols.flatMap { case (opponentSymbol, playerSymbol) =>
-      for {
-        opponent <- Shape.fromOpponentSymbol(opponentSymbol)
-        outcome  <- Outcome.fromPlayerSymbol(playerSymbol)
+    val part2 = symbols.map { case (opponentSymbol, playerSymbol) =>
+      val opponent = Shape.fromOpponentSymbol(opponentSymbol)
+      val outcome  = Outcome.fromPlayerSymbol(playerSymbol)
+      val player   = outcome.guessPlayer(opponent)
 
-        player = outcome.guessPlayer(opponent)
-        score  = outcome.score + player.score
-      } yield score
+      outcome.score + player.score
     }.sum
 
     Result(part1.toString, part2.toString)

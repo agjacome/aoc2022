@@ -9,16 +9,14 @@ object Day10 extends Day {
     final case class Add(amount: Int) extends Instruction(2)
     final case object NoOp            extends Instruction(1)
 
-    def parse(line: String): Option[Instruction] = {
-      val AddLine  = """^addx (-?\d+)$""".r
-      val NoOpLine = """^noop$""".r
+    private val AddLine  = """^addx (-?\d+)$""".r
+    private val NoOpLine = """^noop$""".r
 
-      line match {
-        case AddLine(amount) => Some(Add(amount.toInt))
-        case NoOpLine()      => Some(NoOp)
-        case _               => None
-      }
-    }
+    val parse: String => Instruction = {
+      case AddLine(amount) => Add(amount.toInt)
+      case NoOpLine()      => NoOp
+      case line            => sys.error(s"Could not parse Instruction: ${line}")
+  }
 
   }
 
@@ -82,7 +80,7 @@ object Day10 extends Day {
 
   def run(lines: LazyList[String]): Result = {
     val cpuLog = lines
-      .flatMap(Instruction.parse)
+      .map(Instruction.parse)
       .foldLeft(List(CpuState.initial)) {
         case (states @ head :: _, instruction) => head.execute(instruction) ::: states
         case (Nil, instruction)                => CpuState.initial.execute(instruction)

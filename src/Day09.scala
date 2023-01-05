@@ -16,14 +16,13 @@ object Day09 extends Day {
 
     private val Line = """^([DLRU]) (\d+)$""".r
 
-    def parse(line: String): List[Direction] =
-      line match {
-        case Line("U", count) => List.fill(count.toInt)(Up)
-        case Line("D", count) => List.fill(count.toInt)(Down)
-        case Line("L", count) => List.fill(count.toInt)(Left)
-        case Line("R", count) => List.fill(count.toInt)(Right)
-        case _                => Nil
-      }
+    val parse: String => List[Direction] = {
+      case Line("U", count) => List.fill(count.toInt)(Up)
+      case Line("D", count) => List.fill(count.toInt)(Down)
+      case Line("L", count) => List.fill(count.toInt)(Left)
+      case Line("R", count) => List.fill(count.toInt)(Right)
+      case line             => sys.error(s"Could not parse Direction: ${line}")
+    }
 
   }
 

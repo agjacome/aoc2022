@@ -64,7 +64,7 @@ object Day11 extends Day {
        |\s{4}If true: throw to monkey (\d+)
        |\s{4}If false: throw to monkey (\d+)$""".stripMargin.r
 
-    val parse: String => Option[Monkey] = {
+    val parse: String => Monkey = {
       case MonkeyLines(id, items, operandL, operator, operandR, divisor, truthy, falsey) =>
         def parsedId    = id.toInt
         val parsedItems = items.split(", ").map(_.toLong).to(Queue)
@@ -81,18 +81,17 @@ object Day11 extends Day {
         val parsedDivisor = divisor.toLong
         val parsedThrows  = if (_) truthy.toInt else falsey.toInt
 
-        Some(
-          Monkey(
-            id = parsedId,
-            items = parsedItems,
-            operation = parsedOperation,
-            divisor = parsedDivisor,
-            throwItem = parsedThrows,
-            itemsInspected = 0
-          )
+        Monkey(
+          id = parsedId,
+          items = parsedItems,
+          operation = parsedOperation,
+          divisor = parsedDivisor,
+          throwItem = parsedThrows,
+          itemsInspected = 0
         )
 
-      case _ => None
+      case lines =>
+        sys.error(s"Could not parse Monkey:\n${lines}")
     }
 
     def parse(lines: LazyList[String]): LazyList[Monkey] =
@@ -100,7 +99,7 @@ object Day11 extends Day {
         .filterNot(_.isEmpty)
         .grouped(6)
         .map(_.mkString("\n"))
-        .flatMap(parse)
+        .map(parse)
         .to(LazyList)
 
   }

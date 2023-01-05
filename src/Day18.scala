@@ -36,13 +36,13 @@ object Day18 extends Day {
 
     val zero: Point3D = Point3D(0, 0, 0)
 
-    def parse(line: String): Option[Point3D] = {
-      val Point3DLine = """(\d+),(\d+),(\d+)""".r
+    private val Point3DLine = """(\d+),(\d+),(\d+)""".r
 
-      line match {
-        case Point3DLine(x, y, z) => Some(Point3D(x.toInt, y.toInt, z.toInt))
-        case _                    => None
-      }
+    val parse: String  => Point3D = {
+      case Point3DLine(x, y, z) =>
+        Point3D(x.toInt, y.toInt, z.toInt)
+      case line                    =>
+        sys.error(s"Could not parse Point3D: ${line}")
     }
 
   }
@@ -57,14 +57,18 @@ object Day18 extends Day {
     def exteriorSurfaceArea: Int = {
       var surface: Int = 0
 
-      BFS[Point3D](start = min, end = max, next = point => {
-        val neighbors       = point.neighbors.filter(_.between(min, max))
-        val (blocked, next) = neighbors.partition(droplets.contains)
+      BFS[Point3D](
+        start = min,
+        end = max,
+        next = point => {
+          val neighbors       = point.neighbors.filter(_.between(min, max))
+          val (blocked, next) = neighbors.partition(droplets.contains)
 
-        surface += blocked.size
+          surface += blocked.size
 
-        next
-      })
+          next
+        }
+      )
 
       surface
     }
@@ -88,7 +92,7 @@ object Day18 extends Day {
   object Pond {
 
     def parse(lines: Seq[String]): Pond =
-      Pond(lines.flatMap(Point3D.parse).to(Set))
+      Pond(lines.map(Point3D.parse).to(Set))
 
   }
 

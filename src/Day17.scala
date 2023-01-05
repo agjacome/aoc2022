@@ -36,8 +36,11 @@ object Day17 extends Day {
 
     }
 
-    val fromSymbol: Char => Option[Direction] =
-      Map('<' -> Left, '>' -> Right).get
+    val fromSymbol: Char => Direction = {
+      case '<' => Left
+      case '>' => Right
+      case sym => sys.error(s"Unknown Direction symbol: ${sym}")
+    }
 
   }
 
@@ -182,7 +185,7 @@ object Day17 extends Day {
   }
 
   def run(lines: LazyList[String]): Result = {
-    val jets    = lines.flatMap(_.flatMap(Direction.fromSymbol)).to(List)
+    val jets    = lines.flatMap(_.map(Direction.fromSymbol)).to(List)
     val chamber = Chamber.empty(jets)
 
     val part1 = {

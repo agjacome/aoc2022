@@ -40,8 +40,11 @@ object Day05 extends Day {
     val MoveRegex = """move (\d+) from (\d+) to (\d+)""".r
 
     def parseAll(lines: Seq[String]): Seq[Rearrangement] =
-      lines.collect { case MoveRegex(move, from, to) =>
-        Rearrangement(move.toInt, from.toInt, to.toInt)
+      lines.filter(_.nonEmpty).map {
+        case MoveRegex(move, from, to) =>
+          Rearrangement(move.toInt, from.toInt, to.toInt)
+        case line =>
+          sys.error(s"Could not parse Rearrangement: ${line}")
       }
 
   }

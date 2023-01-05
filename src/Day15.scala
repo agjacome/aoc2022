@@ -28,15 +28,15 @@ object Day15 extends Day {
     private val SensorLine =
       """^Sensor at x=(-?\d+), y=(-?\d+): closest beacon is at x=(-?\d+), y=(-?\d+)$""".r
 
-    def parse(line: String): Option[Sensor] =
-      line match {
-        case SensorLine(sx, sy, bx, by) =>
-          val sensor = Point(col = sx.toInt, row = sy.toInt)
-          val beacon = Point(col = bx.toInt, row = by.toInt)
-          Some(Sensor(sensor, beacon))
+    val parse: String =>Sensor = {
+      case SensorLine(sx, sy, bx, by) =>
+        val sensor = Point(col = sx.toInt, row = sy.toInt)
+        val beacon = Point(col = bx.toInt, row = by.toInt)
+        Sensor(sensor, beacon)
 
-        case _ => None
-      }
+      case line =>
+        sys.error(s"Could not parse Sensor: ${line}")
+    }
 
   }
 
@@ -62,7 +62,7 @@ object Day15 extends Day {
   object SensorSet {
 
     def parse(lines: LazyList[String]): SensorSet = {
-      val sensors = lines.flatMap(Sensor.parse).to(Set)
+      val sensors = lines.map(Sensor.parse).to(Set)
       SensorSet(sensors)
     }
 

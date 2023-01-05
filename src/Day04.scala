@@ -6,20 +6,20 @@ object Day04 extends Day {
 
   private val RangeLine = """^(\d+)-(\d+),(\d+)-(\d+)$""".r
 
-  def parse(line: String): Option[(Interval, Interval)] = {
+  def parse(line: String): (Interval, Interval) = {
     line match {
       case RangeLine(min1, max1, min2, max2) =>
         val left  = Interval(min1.toInt, max1.toInt)
         val right = Interval(min2.toInt, max2.toInt)
-        Some((left, right))
+        (left, right)
 
       case _ =>
-        None
+        sys.error(s"Could not parse Range: ${line}")
     }
   }
 
   def run(lines: LazyList[String]): Result = {
-    val ranges = lines.flatMap(parse)
+    val ranges = lines.map(parse)
 
     val part1 = ranges.count { case (l, r) => l.contains(r) || r.contains(l) }
     val part2 = ranges.count { case (l, r) => l.overlaps(r) }

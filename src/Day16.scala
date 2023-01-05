@@ -9,13 +9,12 @@ object Day16 extends Day {
     private val ValveLine =
       """^Valve ([A-Z]{2}) has flow rate=(\d+); tunnels? leads? to valves? (.+)$""".r
 
-    def parse(line: String): Option[Valve] =
-      line match {
-        case ValveLine(id, rate, next) =>
-          Some(Valve(id, rate.toInt, next.split(", ").to(Set)))
-        case _ =>
-          None
-      }
+    val parse: String => Valve = {
+      case ValveLine(id, rate, next) =>
+        Valve(id, rate.toInt, next.split(", ").to(Set))
+      case line =>
+        sys.error(s"Could not parse Valve: ${line}")
+    }
 
   }
 
@@ -64,7 +63,7 @@ object Day16 extends Day {
   object Volcano {
 
     def parse(lines: LazyList[String]): Volcano =
-      Volcano(lines.flatMap(Valve.parse).to(List))
+      Volcano(lines.map(Valve.parse).to(List))
 
   }
 
