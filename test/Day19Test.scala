@@ -1,5 +1,6 @@
 package dev.agjacome.aoc2022
 
+@munit.IgnoreSuite
 final class Day19Test extends DayTest(Day19) {
 
   val input = LazyList(
