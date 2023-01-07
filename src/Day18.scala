@@ -38,10 +38,10 @@ object Day18 extends Day {
 
     private val Point3DLine = """(\d+),(\d+),(\d+)""".r
 
-    val parse: String  => Point3D = {
+    val parse: String => Point3D = {
       case Point3DLine(x, y, z) =>
         Point3D(x.toInt, y.toInt, z.toInt)
-      case line                    =>
+      case line =>
         sys.error(s"Could not parse Point3D: ${line}")
     }
 

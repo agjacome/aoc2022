@@ -28,7 +28,7 @@ object Day15 extends Day {
     private val SensorLine =
       """^Sensor at x=(-?\d+), y=(-?\d+): closest beacon is at x=(-?\d+), y=(-?\d+)$""".r
 
-    val parse: String =>Sensor = {
+    val parse: String => Sensor = {
       case SensorLine(sx, sy, bx, by) =>
         val sensor = Point(col = sx.toInt, row = sy.toInt)
         val beacon = Point(col = bx.toInt, row = by.toInt)

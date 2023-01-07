@@ -58,6 +58,12 @@ object ops {
     def updating(k: A)(f: B => B): Map[A, B] =
       self.updatedWith(k)(_.map(f))
 
+    def updating(k: A, z: => B)(f: B => B): Map[A, B] =
+      self.updatedWith(k)(_.orElse(Some(z)).map(f))
+
+    def negated(implicit bIsNumeric: Numeric[B]): Map[A, B] =
+      self.map { case (k, v) => k -> Numeric[B].negate(v) }
+
   }
 
   implicit final class BinaryByteInterpolator(private val sc: StringContext) extends AnyVal {

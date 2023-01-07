@@ -16,7 +16,7 @@ object Day10 extends Day {
       case AddLine(amount) => Add(amount.toInt)
       case NoOpLine()      => NoOp
       case line            => sys.error(s"Could not parse Instruction: ${line}")
-  }
+    }
 
   }
 
