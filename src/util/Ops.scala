@@ -1,6 +1,7 @@
 package dev.agjacome.aoc2022
 package util
 
+import scala.collection.mutable.Buffer
 import scala.math.Ordering.Implicits._
 
 object ops {
@@ -50,6 +51,16 @@ object ops {
 
     def forever: LazyList[A] =
       LazyList.continually(self).flatten
+
+    def move(oldIndex: Int, newIndex: Int): Seq[A] = {
+      val value = self(oldIndex)
+
+      val buffer = self.to(Buffer)
+      buffer.remove(oldIndex)
+      buffer.insert(newIndex, value)
+
+      buffer.to(Seq)
+    }
 
   }
 
