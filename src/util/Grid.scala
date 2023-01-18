@@ -35,6 +35,9 @@ final case class Grid[A](cells: Map[Point, A]) {
   def apply(coord: Point): Option[A] =
     cells.get(coord)
 
+  def contains(coord: Point): Boolean =
+    cells.contains(coord)
+
   def keys: Set[Point] =
     cells.keySet
 
